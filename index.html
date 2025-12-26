@@ -3,37 +3,321 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vigor V54.1</title>
+    <title>Vigor V55 - Full Master</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-    
     <style>
         :root {
             --bg-dark: #050505; --card-bg: #111111; --sidebar-bg: #0a0a0a;
             --accent-blue: #3b82f6; --accent-orange: #ff6b00; --accent-emerald: #10b981;
-            --text-main: #ffffff; --text-dim: #888888;
+            --text-main: #ffffff; --text-dim: #888888; --danger: #ef4444;
         }
         * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* NAVIGATIE BALK */
+        /* NAVIGATIE */
         .nav-bar { 
             position: fixed; top: 10px; left: 50%; transform: translateX(-50%); 
-            display: flex; background: rgba(26,26,26,0.9); backdrop-filter: blur(10px);
-            padding: 4px; border-radius: 14px; border: 1px solid #333; z-index: 10000; 
-            width: 92%; max-width: 500px; justify-content: space-between;
+            display: flex; background: rgba(30,30,30,0.95); backdrop-filter: blur(10px);
+            padding: 5px; border-radius: 14px; border: 1px solid #333; z-index: 10000; 
+            width: 94%; max-width: 500px; justify-content: space-around;
         }
-        .nav-btn { 
-            flex: 1; padding: 12px 5px; border: none; background: transparent; 
-            color: #666; cursor: pointer; font-weight: 700; font-size: 0.75em; border-radius: 10px; 
-        }
+        .nav-btn { flex: 1; padding: 12px 5px; border: none; background: transparent; color: #777; cursor: pointer; font-weight: 700; font-size: 0.75em; border-radius: 10px; transition: 0.2s; }
         .nav-btn.active { background: var(--accent-blue); color: white; }
 
-        /* CONTENT AREA */
-        .main-view { 
-            flex: 1; overflow-y: auto; padding: 80px 20px 100px; 
-            -webkit-overflow-scrolling: touch; 
+        /* CONTENT */
+        .main-view { flex: 1; overflow-y: auto; padding: 85px 15px 100px; scroll-behavior: smooth; }
+        .view-pane { display: none; }
+        .view-pane.active { display: block; }
+
+        /* DRAWER */
+        .drawer { 
+            position: fixed; top: 0; right: 0; bottom: 0; width: 85%; 
+            background: var(--sidebar-bg); border-left: 1px solid #222; 
+            z-index: 10001; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 80px 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
         }
+        .drawer.open { transform: translateX(0); }
+
+        /* COMPONENTS */
+        .card { background: var(--card-bg); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; }
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        label { display: block; font-size: 0.65em; color: var(--text-dim); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
+        .stat-val { font-size: 1.6em; font-weight: 900; }
+        input, textarea, select { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 10px; margin-bottom: 10px; font-size: 16px; }
+        .btn-full { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
+        
+        /* TASK LISTS */
+        .task-row { display: flex; align-items: center; background: #1a1a1a; padding: 10px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #444; font-size: 0.85em; }
+        .task-row.done { border-color: var(--accent-emerald); opacity: 0.5; text-decoration: line-through; }
+
+        /* VITALITY MATRIX */
+        .matrix { display: grid; grid-template-columns: repeat(7, 1fr) 30px; gap: 4px; margin-top: 10px; }
+        .day-cell { background: #0a0a0a; border: 1px solid #222; border-radius: 4px; padding: 5px; min-height: 50px; text-align: center; font-size: 0.6em; position: relative; }
+        .day-cell.done { border-color: var(--accent-emerald); background: rgba(16, 185, 129, 0.1); }
+        .day-num { font-weight: 800; display: block; margin-bottom: 2px; }
+
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--accent-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10002; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: none; color: white; font-size: 24px; }
+    </style>
+</head>
+<body>
+
+    <nav class="nav-bar">
+        <button class="nav-btn active" id="nb-home">HUB</button>
+        <button class="nav-btn" id="nb-crm">NETWORK</button>
+        <button class="nav-btn" id="nb-fit">VITALITY</button>
+        <button class="nav-btn" id="nb-lev">LEV</button>
+    </nav>
+
+    <button class="fab" id="fab-menu">☰</button>
+
+    <main class="main-view">
+        <div id="v-home" class="view-pane active">
+            <h1 style="margin-top:0">Command <span style="color:var(--accent-blue)">Hub</span></h1>
+            <div class="grid-stats">
+                <div class="card"><label>Dossiers</label><div class="stat-val" id="st-n">0</div></div>
+                <div class="card"><label>Vitality</label><div class="stat-val" id="st-v">0%</div></div>
+                <div class="card"><label>Streak</label><div class="stat-val" id="st-s">0</div></div>
+                <div class="card"><label>Gewicht</label><div class="stat-val" id="st-w">0</div></div>
+            </div>
+            <div class="card" style="border-left: 5px solid var(--accent-orange)">
+                <label style="color:var(--accent-orange)">Actuele Weekfocus (80/20)</label>
+                <div id="dash-focus" style="font-weight:700; font-size:1.1em; margin-top:5px">---</div>
+            </div>
+            <div class="card"><label>Trend</label><canvas id="mainChart" height="150"></canvas></div>
+            <div id="bday-alert"></div>
+        </div>
+
+        <div id="v-crm" class="view-pane">
+            <h2 id="crm-header">Relatie Dossier</h2>
+            <div class="card">
+                <label>Naam</label><input type="text" id="p-name" oninput="CRM.save()">
+                <label>Categorie</label><input type="text" id="p-cat" oninput="CRM.save()" placeholder="Zakelijk, Vrienden, etc.">
+                <label>Geboortedatum</label><input type="date" id="p-dob" onchange="CRM.save()">
+                <label style="color:var(--accent-orange)">Strategic Next Step</label>
+                <textarea id="p-next" oninput="CRM.save()" style="border-color:var(--accent-orange)"></textarea>
+                
+                <div id="p-detail-fields">
+                    <label>Werk/Context</label><textarea id="p-werk" oninput="CRM.save()"></textarea>
+                    <label>Hobby's/Privé</label><textarea id="p-prive" oninput="CRM.save()"></textarea>
+                </div>
+
+                <div id="p-task-section" style="margin-top:15px; border-top:1px solid #333; padding-top:15px; display:none;">
+                    <label>Dossier Acties (Enter)</label>
+                    <input type="text" id="p-task-in" placeholder="+ Actie toevoegen" onkeydown="if(event.key==='Enter') CRM.addTask()">
+                    <div id="p-task-list"></div>
+                </div>
+            </div>
+            <button class="btn-full" style="background:#222; color:white" onclick="CRM.reset()">+ NIEUW DOSSIER</button>
+        </div>
+
+        <div id="v-fit" class="view-pane">
+            <h2>Vitality Matrix</h2>
+            <div class="card">
+                <label>Weging (KG)</label>
+                <input type="number" id="w-in" step="0.1" placeholder="85.0" onkeydown="if(event.key==='Enter') FIT.logWeight()">
+            </div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center">
+                    <label>Weekdoel: <span id="target-val">3</span>x sporten</label>
+                    <input type="range" id="target-range" min="1" max="7" step="1" style="width:100px" oninput="FIT.setTarget(this.value)">
+                </div>
+            </div>
+            <div id="matrix-container"></div>
+        </div>
+
+        <div id="v-lev" class="view-pane">
+            <h2>Leverage Log</h2>
+            <div class="card" style="border-left: 5px solid var(--accent-emerald)">
+                <label>Wekelijkse 80/20 Analyse</label>
+                <textarea id="lev-8020" oninput="LEV.save()" style="height:100px"></textarea>
+            </div>
+            <div class="card">
+                <label>Decision Journal</label>
+                <input type="text" id="dj-title" placeholder="Besluit titel...">
+                <textarea id="dj-pred" placeholder="Wat voorspel je als uitkomst?"></textarea>
+                <button class="btn-full" style="background:var(--accent-emerald); color:black" onclick="LEV.addDecision()">LOG BESLUIT</button>
+                <div id="dj-list" style="margin-top:10px"></div>
+            </div>
+            <div class="card">
+                <label>Systeem & Data</label>
+                <button class="btn-full" style="background:var(--accent-blue); color:white" onclick="DATA.export()">💾 DOWNLOAD BACKUP</button>
+                <button class="btn-full" style="background:#222; color:white" onclick="document.getElementById('imp').click()">📂 IMPORT DATA</button>
+                <input type="file" id="imp" style="display:none" onchange="DATA.import(event)">
+            </div>
+        </div>
+    </main>
+
+    <div id="drawer" class="drawer">
+        <label>Zoeken</label>
+        <input type="text" id="search" placeholder="Naam contact..." onkeyup="UI.render()">
+        <div id="crm-list-drawer"></div>
+        <button class="btn-full" id="close-drawer" style="background:#222; color:white; margin-top:20px">SLUIT MENU</button>
+    </div>
+
+<script>
+    // --- DATABASE & STATE ---
+    let STATE = {
+        view: 'home',
+        selId: null,
+        db: JSON.parse(localStorage.getItem('vigor_v55')) || {
+            people: [],
+            fit: { target: 3, logs: [], tasks: [] },
+            lev: { 8020: {}, decisions: [] }
+        }
+    };
+
+    const SYSTEM = {
+        save: () => { localStorage.setItem('vigor_v55', JSON.stringify(STATE.db)); UI.render(); },
+        getWeek: () => {
+            const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 4 - (d.getDay()||7));
+            return Math.ceil((((d - new Date(d.getFullYear(),0,1)) / 8.64e7) + 1));
+        }
+    };
+
+    // --- MODULES ---
+    const CRM = {
+        save: () => {
+            const n = document.getElementById('p-name').value; if(!n) return;
+            let p = STATE.selId ? STATE.db.people.find(x => x.id === STATE.selId) : null;
+            if(!p) { p = { id: Date.now(), tasks: [] }; STATE.db.people.push(p); STATE.selId = p.id; }
+            ['name','cat','dob','next','werk','prive'].forEach(f => p[f] = document.getElementById('p-'+f).value);
+            SYSTEM.save();
+        },
+        edit: (id) => {
+            STATE.selId = id; const p = STATE.db.people.find(x => x.id === id);
+            ['name','cat','dob','next','werk','prive'].forEach(f => document.getElementById('p-'+f).value = p[f] || '');
+            document.getElementById('p-task-section').style.display = 'block';
+            CRM.renderTasks();
+            UI.nav('crm');
+        },
+        reset: () => { STATE.selId = null; document.querySelectorAll('#v-crm input, #v-crm textarea').forEach(i => i.value=''); document.getElementById('p-task-section').style.display = 'none'; UI.nav('crm'); },
+        addTask: () => {
+            const i = document.getElementById('p-task-in'); if(!i.value) return;
+            STATE.db.people.find(x => x.id === STATE.selId).tasks.push({id: Date.now(), txt: i.value, done: false});
+            i.value = ''; CRM.renderTasks(); SYSTEM.save();
+        },
+        renderTasks: () => {
+            const p = STATE.db.people.find(x => x.id === STATE.selId);
+            document.getElementById('p-task-list').innerHTML = p.tasks.map(t => `<div class="task-row ${t.done?'done':''}" onclick="CRM.toggleTask(${t.id})">${t.txt}</div>`).join('');
+        },
+        toggleTask: (tid) => {
+            const p = STATE.db.people.find(x => x.id === STATE.selId);
+            const t = p.tasks.find(x => x.id === tid); t.done = !t.done;
+            if(t.done) confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+            CRM.renderTasks(); SYSTEM.save();
+        }
+    };
+
+    const FIT = {
+        logWeight: () => {
+            const v = document.getElementById('w-in').value; if(!v) return;
+            STATE.db.fit.logs.unshift({v: parseFloat(v), d: new Date().toLocaleDateString()});
+            document.getElementById('w-in').value = ''; SYSTEM.save();
+        },
+        setTarget: (v) => { STATE.db.fit.target = v; document.getElementById('target-val').innerText = v; SYSTEM.save(); },
+        toggleDay: (dateStr) => {
+            const idx = STATE.db.fit.tasks.indexOf(dateStr);
+            if(idx > -1) STATE.db.fit.tasks.splice(idx,1); else STATE.db.fit.tasks.push(dateStr);
+            SYSTEM.save();
+        }
+    };
+
+    const LEV = {
+        save: () => { 
+            STATE.db.lev.8020[SYSTEM.getWeek()] = document.getElementById('lev-8020').value; 
+            SYSTEM.save(); 
+        },
+        addDecision: () => {
+            const t = document.getElementById('dj-title').value; if(!t) return;
+            STATE.db.lev.decisions.unshift({id: Date.now(), t, p: document.getElementById('dj-pred').value, d: new Date().toISOString()});
+            document.getElementById('dj-title').value = ''; document.getElementById('dj-pred').value = ''; SYSTEM.save();
+        }
+    };
+
+    // --- UI ENGINE ---
+    const UI = {
+        init: () => {
+            document.getElementById('nb-home').onclick = () => UI.nav('home');
+            document.getElementById('nb-crm').onclick = () => UI.nav('crm');
+            document.getElementById('nb-fit').onclick = () => UI.nav('fit');
+            document.getElementById('nb-lev').onclick = () => UI.nav('lev');
+            document.getElementById('fab-menu').onclick = () => UI.toggleDrawer();
+            document.getElementById('close-drawer').onclick = () => UI.toggleDrawer();
+            UI.render();
+        },
+        nav: (v) => { STATE.view = v; document.getElementById('drawer').classList.remove('open'); UI.render(); },
+        toggleDrawer: () => document.getElementById('drawer').classList.toggle('open'),
+        render: () => {
+            document.querySelectorAll('.view-pane').forEach(p => p.classList.toggle('active', p.id === 'v-'+STATE.view));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === 'nb-'+STATE.view));
+            
+            // Dashboard
+            document.getElementById('st-n').innerText = STATE.db.people.length;
+            document.getElementById('st-w').innerText = STATE.db.fit.logs[0]?.v || 0;
+            document.getElementById('dash-focus').innerText = STATE.db.lev.8020[SYSTEM.getWeek()] || "Geen focus ingesteld.";
+            
+            // Drawer List
+            const q = document.getElementById('search').value.toLowerCase();
+            document.getElementById('crm-list-drawer').innerHTML = STATE.db.people
+                .filter(p => p.name.toLowerCase().includes(q))
+                .map(p => `<div class="card" style="padding:10px" onclick="CRM.edit(${p.id})"><b>${p.name}</b></div>`).join('');
+
+            // Matrix
+            UI.renderMatrix();
+            // Decisions (180 day alert)
+            UI.renderDecisions();
+        },
+        renderMatrix: () => {
+            const cont = document.getElementById('matrix-container');
+            let html = '<div class="matrix" style="font-size:0.5em; color:gray"><div>M</div><div>D</div><div>W</div><div>D</div><div>V</div><div>Z</div><div>Z</div><div>🏆</div></div>';
+            const today = new Date(); const start = new Date(); start.setDate(today.getDate() - today.getDay() + 1);
+            
+            for(let w=0; w<4; w++) {
+                html += '<div class="matrix">';
+                let doneInWeek = 0;
+                for(let d=0; d<7; d++) {
+                    let cur = new Date(start); cur.setDate(cur.getDate() + (w*7) + d);
+                    let ds = cur.toISOString().split('T')[0];
+                    let isDone = STATE.db.fit.tasks.includes(ds);
+                    if(isDone) doneInWeek++;
+                    html += `<div class="day-cell ${isDone?'done':''}" onclick="FIT.toggleDay('${ds}')"><span class="day-num">${cur.getDate()}</span></div>`;
+                }
+                html += `<div style="display:flex; align-items:center; justify-content:center; opacity:${doneInWeek>=STATE.db.fit.target?1:0.1}">🏆</div></div>`;
+                if(w===0) document.getElementById('st-v').innerText = Math.round((doneInWeek/STATE.db.fit.target)*100) + "%";
+            }
+            cont.innerHTML = html;
+        },
+        renderDecisions: () => {
+            const now = new Date();
+            document.getElementById('dj-list').innerHTML = STATE.db.lev.decisions.map(d => {
+                const diff = (now - new Date(d.d)) / (1000*60*60*24);
+                return `<div class="card" style="font-size:0.8em; border-color:${diff > 180 ? 'var(--danger)' : '#333'}">
+                    <b>${d.t}</b><br><small>${new Date(d.d).toLocaleDateString()}</small>
+                    ${diff > 180 ? '<br><b style="color:var(--danger)">!!! REVIEW NODIG (180+ Dagen)</b>' : ''}
+                </div>`;
+            }).join('');
+        }
+    };
+
+    const DATA = {
+        export: () => {
+            const blob = new Blob([JSON.stringify(STATE.db)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `vigor_${new Date().toISOString().split('T')[0]}.json`; a.click();
+        },
+        import: (e) => {
+            const r = new FileReader(); r.onload = (ev) => {
+                STATE.db = JSON.parse(ev.target.result); SYSTEM.save(); location.reload();
+            };
+            r.readAsText(e.target.files[0]);
+        }
+    };
+
+    window.onload = UI.init;
+</script>
+</body>
+</html>
         .view-pane { display: none; }
         .view-pane.active { display: block; animation: fadeIn 0.2s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
