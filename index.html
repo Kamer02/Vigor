@@ -3,62 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vigor V58</title>
+    <title>Vigor V59 - Master Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --bg: #050505; --card: #111; --blue: #3b82f6; --orange: #ff6b00; --green: #10b981; --red: #ef4444; --text: #fff; --dim: #888; }
+        :root { --bg: #050505; --card: #121212; --blue: #3b82f6; --orange: #ff6b00; --green: #10b981; --red: #ef4444; --text: #fff; --dim: #888; }
         * { box-sizing: border-box; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
+        /* NAVIGATIE */
         .nav { position: fixed; top: 0; width: 100%; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); display: flex; z-index: 1000; border-bottom: 1px solid #333; }
-        .nav-btn { flex: 1; padding: 18px 5px; background: none; border: none; color: var(--dim); font-weight: 800; font-size: 11px; text-transform: uppercase; }
+        .nav-btn { flex: 1; padding: 18px 5px; background: none; border: none; color: var(--dim); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
         .nav-btn.active { color: var(--blue); border-bottom: 3px solid var(--blue); }
 
+        /* CONTAINERS */
         .container { flex: 1; overflow-y: auto; padding: 80px 15px 100px; max-width: 600px; margin: 0 auto; width: 100%; }
         .pane { display: none; }
         .pane.active { display: block; }
         
-        .card { background: var(--card); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; position: relative; }
-        label { display: block; font-size: 10px; color: var(--dim); font-weight: 900; text-transform: uppercase; margin-bottom: 6px; }
+        /* CARDS & UI */
+        .card { background: var(--card); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; position: relative; overflow: hidden; }
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        label { display: block; font-size: 10px; color: var(--dim); font-weight: 900; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
         .val { font-size: 24px; font-weight: 900; }
-        
         input, textarea, select { width: 100%; padding: 14px; background: #000; border: 1px solid #333; color: #fff; border-radius: 12px; margin-bottom: 12px; font-size: 16px; }
-        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .del-btn { color: var(--red); background: none; border: 1px solid var(--red); padding: 8px; border-radius: 8px; font-size: 12px; margin-top: 10px; }
 
-        /* MATRIX */
-        .matrix-grid { display: grid; grid-template-columns: repeat(7, 1fr) 35px; gap: 5px; margin-top: 10px; }
+        /* VITALITY MATRIX */
+        .matrix-grid { display: grid; grid-template-columns: repeat(7, 1fr) 35px; gap: 6px; margin-top: 10px; }
         .m-day { background: #000; border: 1px solid #222; border-radius: 8px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
         .m-day.done { border-color: var(--green); background: rgba(16, 185, 129, 0.1); color: var(--green); }
-        .m-day.today { border-color: var(--blue); box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+        .m-day.today { border-color: var(--blue); box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
 
-        /* LOGS */
-        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; font-size: 14px; }
-        .log-tag { font-size: 10px; background: #222; padding: 2px 6px; border-radius: 4px; color: var(--dim); margin-left: 8px; }
-
-        #drawer { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #0a0a0a; z-index: 2000; transition: 0.3s; padding: 80px 20px; border-left: 1px solid #333; overflow-y: auto; }
-        #drawer.open { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
-        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--blue); border-radius: 50%; color: white; border: none; font-size: 24px; z-index: 1500; }
+        /* DRAWER & LISTS */
+        #drawer { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #0a0a0a; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 80px 20px; border-left: 1px solid #333; overflow-y: auto; }
+        #drawer.open { right: 0; box-shadow: -20px 0 40px rgba(0,0,0,0.9); }
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--blue); border-radius: 50%; color: white; border: none; font-size: 24px; z-index: 1500; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .list-item { background: #1a1a1a; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--blue); }
+        
+        .task-row { display: flex; align-items: center; background: #000; padding: 10px; border-radius: 8px; margin-top: 5px; font-size: 14px; border: 1px solid #222; }
+        .task-row.done { opacity: 0.4; text-decoration: line-through; }
     </style>
 </head>
 <body>
 
     <div class="nav">
-        <button id="btn-hub" class="nav-btn active" onclick="show('hub')">Hub</button>
-        <button id="btn-crm" class="nav-btn" onclick="show('crm')">Network</button>
-        <button id="btn-fit" class="nav-btn" onclick="show('fit')">Vitality</button>
-        <button id="btn-lev" class="nav-btn" onclick="show('lev')">Leverage</button>
+        <button id="n-hub" class="nav-btn active" onclick="go('hub')">Hub</button>
+        <button id="n-crm" class="nav-btn" onclick="go('crm')">Network</button>
+        <button id="n-fit" class="nav-btn" onclick="go('fit')">Vitality</button>
+        <button id="n-lev" class="nav-btn" onclick="go('lev')">Leverage</button>
     </div>
 
-    <button class="fab" onclick="openDrawer()">☰</button>
+    <button class="fab" onclick="toggleDrawer()">☰</button>
 
     <div class="container">
         <div id="p-hub" class="pane active">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="grid">
+                <div class="card"><label>Dossiers</label><div class="val" id="h-n">0</div></div>
                 <div class="card"><label>Vitality</label><div class="val" id="h-v" style="color:var(--green)">0%</div></div>
                 <div class="card"><label>Streak</label><div class="val" id="h-s" style="color:var(--orange)">0</div></div>
+                <div class="card"><label>Gewicht</label><div class="val" id="h-w">0</div></div>
             </div>
             <div class="card"><label>Gewicht Trend</label><canvas id="weightChart" height="150"></canvas></div>
             <div id="alert-zone"></div>
+            <div class="card" style="border-left: 5px solid var(--orange)">
+                <label style="color:var(--orange)">Focus 80/20</label>
+                <div id="h-focus" style="font-weight:bold; font-size:1.1em; margin-top:5px">Geen focus ingesteld.</div>
+            </div>
         </div>
 
         <div id="p-crm" class="pane">
@@ -66,175 +78,179 @@
                 <label>Naam Dossier</label><input type="text" id="c-name" oninput="save()">
                 <label style="color:var(--orange)">Strategic Next Step</label>
                 <textarea id="c-next" oninput="save()" style="border-color:var(--orange); height:80px"></textarea>
-                <label>Info</label><textarea id="c-ctx" oninput="save()"></textarea>
+                <div class="grid">
+                    <div><label>Verjaardag</label><input type="date" id="c-dob" onchange="save()"></div>
+                    <div><label>Relatie</label><select id="c-cat" onchange="save()"><option>Privé</option><option>Werk</option><option>Hobby</option></select></div>
+                </div>
+                <label>Context / Bio</label><textarea id="c-ctx" oninput="save()"></textarea>
+                
+                <div id="task-area" style="display:none; border-top:1px solid #333; padding-top:15px; margin-top:10px;">
+                    <label>Dossier Checklist</label>
+                    <input type="text" id="t-in" placeholder="+ Voeg taak toe (Enter)" onkeydown="if(event.key==='Enter') addTask()">
+                    <div id="t-list"></div>
+                </div>
+                <button class="del-btn" id="btn-del-p" onclick="deletePerson()" style="display:none">🗑️ Verwijder Dossier</button>
             </div>
             <button class="btn" style="background:#222; color:#fff" onclick="resetCRM()">+ NIEUW DOSSIER</button>
         </div>
 
         <div id="p-fit" class="pane">
             <div class="card">
-                <label>Workout Toevoegen (Vandaag)</label>
-                <div style="display:flex; gap:8px;">
-                    <input type="text" id="f-sport-type" placeholder="Bijv. Hardlopen, Gym..." style="margin:0;">
-                    <button class="btn" style="width:80px; background:var(--green); padding:0;" onclick="logSport()">OK</button>
+                <label>Workout Log</label>
+                <div style="display:flex; gap:8px">
+                    <input type="text" id="f-sport" placeholder="Bijv. Squash, Gym..." style="margin:0">
+                    <button class="btn" style="width:70px; background:var(--green); padding:0" onclick="logSport()">OK</button>
                 </div>
             </div>
-            
-            <div class="card">
-                <label>Gewicht Log</label>
-                <input type="number" id="f-weight" step="0.1" placeholder="85.0" onkeydown="if(event.key==='Enter') logWeight()">
+            <div class="grid">
+                <div class="card"><label>Weekdoel</label><select id="f-target" onchange="setTarget(this.value)"><option value="1">1x</option><option value="2">2x</option><option value="3" selected>3x</option><option value="4">4x</option><option value="5">5x</option></select></div>
+                <div class="card"><label>Gewicht</label><input type="number" id="f-weight" step="0.1" onkeydown="if(event.key==='Enter') logWeight()" style="margin:0"></div>
             </div>
-
-            <div class="card"><label>28-Dagen Matrix</label><div id="matrix-container"></div></div>
-            
-            <div class="card"><label>Recente Workouts</label><div id="sport-history"></div></div>
+            <div class="card"><label>28-Dagen Matrix</label><div id="matrix-box"></div></div>
+            <div class="card"><label>Workout Historie</label><div id="sport-history"></div></div>
+            <div class="card"><label>Gewicht Historie</label><div id="weight-history"></div></div>
         </div>
 
         <div id="p-lev" class="pane">
-            <div class="card"><label>80/20 Weekfocus</label><textarea id="l-8020" oninput="saveLev()" style="height:120px"></textarea></div>
-            <button class="btn" style="background:var(--blue); color:#fff" onclick="exportData()">💾 DOWNLOAD BACKUP</button>
+            <div class="card"><label>80/20 Weekfocus</label><textarea id="l-focus" oninput="saveLev()" style="height:100px"></textarea></div>
+            <div class="card">
+                <label>Decision Journal</label>
+                <input type="text" id="dj-t" placeholder="Besluit...">
+                <textarea id="dj-p" placeholder="Voorspelling..."></textarea>
+                <button class="btn" style="background:var(--blue); color:#fff" onclick="addDJ()">LOG BESLUIT</button>
+                <div id="dj-list" style="margin-top:15px"></div>
+            </div>
+            <button class="btn" style="background:#222; color:#fff" onclick="exportData()">💾 DOWNLOAD BACKUP</button>
         </div>
     </div>
 
     <div id="drawer">
-        <label>Zoeken</label>
-        <input type="text" id="search" placeholder="Naam..." onkeyup="renderList()">
-        <div id="list-container"></div>
+        <label>Zoeken & Navigeren</label>
+        <input type="text" id="q" placeholder="Zoek op naam..." onkeyup="renderList()">
+        <div id="list-box"></div>
+        <button class="btn" style="background:#222; margin-top:20px" onclick="toggleDrawer(false)">SLUITEN</button>
     </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('vigor_v58')) || { 
-        people: [], 
-        fit: { target: 3, logs: [], tasks: [], sportEntries: {} }, 
-        lev: { focus: {} } 
-    };
-    let selId = null;
-    let myChart = null;
+    let db = JSON.parse(localStorage.getItem('vigor_v59')) || { people: [], fit: { target: 3, logs: [], tasks: [], sportEntries: {} }, lev: { focus: {}, dj: [] } };
+    let selId = null, myChart = null;
 
-    function persist() { localStorage.setItem('vigor_v58', JSON.stringify(db)); render(); }
-    function getWk() { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 4 - (d.getDay()||7)); return Math.ceil((((d - new Date(d.getFullYear(),0,1)) / 8.64e7) + 1)); }
+    const persist = () => { localStorage.setItem('vigor_v59', JSON.stringify(db)); render(); };
+    const getWk = () => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()+4-(d.getDay()||7)); return Math.ceil((((d-new Date(d.getFullYear(),0,1))/8.64e7)+1)); };
 
-    function show(pane) {
+    function go(pane) {
         document.querySelectorAll('.pane, .nav-btn').forEach(el => el.classList.remove('active'));
-        document.getElementById('p-' + pane).classList.add('active');
-        document.getElementById('btn-' + pane).classList.add('active');
-        closeDrawer(); render();
+        document.getElementById('p-'+pane).classList.add('active');
+        document.getElementById('n-'+pane).classList.add('active');
+        toggleDrawer(false); render();
     }
 
-    function openDrawer() { document.getElementById('drawer').classList.add('open'); }
-    function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
+    function toggleDrawer(s) { const d = document.getElementById('drawer'); if(s===undefined) d.classList.toggle('open'); else s?d.classList.add('open'):d.classList.remove('open'); }
 
-    // --- CRM ---
+    // CRM
     function save() {
-        if (!selId && !document.getElementById('c-name').value) return;
+        if(!selId && !document.getElementById('c-name').value) return;
         let p = db.people.find(x => x.id === selId);
-        if (!p) { p = { id: Date.now() }; db.people.push(p); selId = p.id; }
-        ['name','next','ctx'].forEach(f => p[f] = document.getElementById('c-'+f).value);
+        if(!p) { p = { id: Date.now(), tasks: [] }; db.people.push(p); selId = p.id; }
+        ['name','next','ctx','dob','cat'].forEach(f => p[f] = document.getElementById('c-'+f).value);
         persist();
     }
-    function resetCRM() { selId = null; document.querySelectorAll('#p-crm input, #p-crm textarea').forEach(i => i.value=''); render(); }
+    function edit(id) {
+        selId = id; const p = db.people.find(x => x.id === id);
+        ['name','next','ctx','dob','cat'].forEach(f => document.getElementById('c-'+f).value = p[f] || '');
+        document.getElementById('task-area').style.display = 'block';
+        document.getElementById('btn-del-p').style.display = 'block';
+        renderTasks(); go('crm');
+    }
+    function resetCRM() { selId = null; document.querySelectorAll('#p-crm input, #p-crm textarea').forEach(i => i.value=''); document.getElementById('task-area').style.display='none'; document.getElementById('btn-del-p').style.display='none'; }
+    function deletePerson() { if(confirm('Verwijderen?')) { db.people = db.people.filter(p => p.id !== selId); resetCRM(); persist(); } }
+    function addTask() { const i = document.getElementById('t-in'), p = db.people.find(x => x.id === selId); p.tasks.push({id:Date.now(), t:i.value, d:false}); i.value=''; renderTasks(); persist(); }
+    function toggleTask(tid) { const p = db.people.find(x => x.id === selId), t = p.tasks.find(x => x.id === tid); t.d = !t.d; persist(); renderTasks(); }
+    function renderTasks() { const p = db.people.find(x => x.id === selId); document.getElementById('t-list').innerHTML = p.tasks.map(t => `<div class="task-row ${t.d?'done':''}" onclick="toggleTask(${t.id})">${t.t}</div>`).join(''); }
 
-    // --- VITALITY ---
-    function logWeight() { 
-        const v = document.getElementById('f-weight').value; 
-        if(v) db.fit.logs.unshift({v, d: new Date().toLocaleDateString('nl-NL', {day:'2-digit', month:'2-digit'})});
-        document.getElementById('f-weight').value = ''; persist(); 
+    // Vitality
+    function logWeight() { const v = document.getElementById('f-weight').value; if(v) db.fit.logs.unshift({v, d: new Date().toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit'})}); document.getElementById('f-weight').value=''; persist(); }
+    function logSport() { const t = document.getElementById('f-sport').value || "Sessie", ds = new Date().toISOString().split('T')[0]; if(!db.fit.tasks.includes(ds)) db.fit.tasks.push(ds); db.fit.sportEntries[ds] = t; document.getElementById('f-sport').value=''; persist(); checkConfetti(); }
+    function setTarget(v) { db.fit.target = v; persist(); }
+    function delWeight(i) { db.fit.logs.splice(i,1); persist(); }
+    function delSport(ds) { db.fit.tasks = db.fit.tasks.filter(x => x !== ds); delete db.fit.sportEntries[ds]; persist(); }
+    function toggleDay(ds) { const i = db.fit.tasks.indexOf(ds); if(i>-1) { db.fit.tasks.splice(i,1); delete db.fit.sportEntries[ds]; } else { db.fit.tasks.push(ds); db.fit.sportEntries[ds] = "Sport"; } persist(); }
+
+    function checkConfetti() {
+        const start = new Date(); start.setDate(start.getDate() - start.getDay() + 1);
+        let curDone = db.fit.tasks.filter(ds => new Date(ds) >= start).length;
+        if(curDone == db.fit.target) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
     }
 
-    function logSport() {
-        const type = document.getElementById('f-sport-type').value || "Sessie";
-        const ds = new Date().toISOString().split('T')[0];
-        if(!db.fit.tasks.includes(ds)) db.fit.tasks.push(ds);
-        db.fit.sportEntries[ds] = type;
-        document.getElementById('f-sport-type').value = ''; persist();
-    }
+    // Leverage
+    function saveLev() { db.lev.focus[getWk()] = document.getElementById('l-focus').value; persist(); }
+    function addDJ() { db.lev.dj.unshift({id:Date.now(), t:document.getElementById('dj-t').value, p:document.getElementById('dj-p').value, d:new Date().toISOString()}); document.getElementById('dj-t').value=''; document.getElementById('dj-p').value=''; persist(); }
+    function delDJ(id) { db.lev.dj = db.lev.dj.filter(x => x.id !== id); persist(); }
 
-    function delSport(ds) {
-        db.fit.tasks = db.fit.tasks.filter(t => t !== ds);
-        delete db.fit.sportEntries[ds];
-        persist();
-    }
-
+    // Render Engines
     function render() {
-        // Hub Stats
-        document.getElementById('h-v').innerText = db.fit.tasks.length > 0 ? "OK" : "0%";
+        const wk = getWk();
+        document.getElementById('h-n').innerText = db.people.length;
+        document.getElementById('h-w').innerText = db.fit.logs[0]?.v || 0;
+        document.getElementById('h-focus').innerText = db.lev.focus[wk] || "Stel focus in bij Leverage";
         
-        // Render List & Matrix
-        renderMatrix();
-        renderList();
-        renderChart();
+        // Alerts
+        const todayStr = new Date().toISOString().slice(5,10);
+        const bdays = db.people.filter(p => p.dob && p.dob.slice(5,10) === todayStr);
+        let alerts = bdays.map(p => `<div class="card" style="background:var(--orange); font-weight:bold" onclick="edit(${p.id})">🎂 Jarig: ${p.name}</div>`);
         
-        // Sport History
-        const sportLogs = db.fit.tasks.sort().reverse().slice(0,5);
-        document.getElementById('sport-history').innerHTML = sportLogs.map(ds => `
-            <div class="log-item">
-                <span>${ds} <span class="log-tag">${db.fit.sportEntries[ds] || 'Sport'}</span></span>
-                <span onclick="delSport('${ds}')" style="color:var(--red)">✕</span>
-            </div>
-        `).join('');
+        const oldDJ = db.lev.dj.filter(d => (new Date() - new Date(d.d)) / 8.64e7 > 180);
+        if(oldDJ.length) alerts.push(`<div class="card" style="border-color:var(--red); color:var(--red)">⚠️ ${oldDJ.length} besluiten moeten geëvalueerd worden.</div>`);
+        document.getElementById('alert-zone').innerHTML = alerts.join('');
+
+        renderMatrix(); renderList(); renderChart(); renderHistory();
     }
 
     function renderMatrix() {
         const start = new Date(); start.setDate(start.getDate() - start.getDay() + 1);
-        let html = '<div class="matrix-grid" style="font-size:9px; color:var(--dim); text-align:center"><div>M</div><div>D</div><div>W</div><div>D</div><div>V</div><div>Z</div><div>Z</div><div></div></div>';
+        let html = '<div class="matrix-grid" style="color:var(--dim); font-size:9px; text-align:center"><div>M</div><div>D</div><div>W</div><div>D</div><div>V</div><div>Z</div><div>Z</div><div></div></div>';
         let wkDone = 0, streak = 0, check = new Date();
         while(db.fit.tasks.includes(check.toISOString().split('T')[0])) { streak++; check.setDate(check.getDate()-1); }
         document.getElementById('h-s').innerText = streak;
 
         for(let w=0; w<4; w++) {
             html += '<div class="matrix-grid">';
-            let curDone = 0;
+            let curD = 0;
             for(let d=0; d<7; d++) {
                 let cur = new Date(start); cur.setDate(cur.getDate() + (w*7) + d);
                 let ds = cur.toISOString().split('T')[0], isDone = db.fit.tasks.includes(ds), isToday = ds === new Date().toISOString().split('T')[0];
-                if(isDone && w===0) curDone++;
+                if(isDone && w===0) curD++;
                 html += `<div class="m-day ${isDone?'done':''} ${isToday?'today':''}" onclick="toggleDay('${ds}')">${cur.getDate()}</div>`;
             }
-            html += `<div style="display:flex; align-items:center; justify-content:center; font-size:18px">${curDone>=db.fit.target?'🏆':''}</div></div>`;
-            if(w===0) wkDone = curDone;
+            html += `<div style="display:flex; align-items:center; justify-content:center; font-size:16px">${curD>=db.fit.target?'🏆':''}</div></div>`;
+            if(w===0) wkDone = curD;
         }
-        document.getElementById('matrix-container').innerHTML = html;
+        document.getElementById('matrix-box').innerHTML = html;
         document.getElementById('h-v').innerText = Math.round((wkDone/db.fit.target)*100) + "%";
     }
 
-    function toggleDay(ds) {
-        const i = db.fit.tasks.indexOf(ds);
-        if(i>-1) {
-            db.fit.tasks.splice(i,1);
-            delete db.fit.sportEntries[ds];
-        } else {
-            db.fit.tasks.push(ds);
-            db.fit.sportEntries[ds] = "Workout";
-        }
-        persist();
+    function renderHistory() {
+        document.getElementById('weight-history').innerHTML = db.fit.logs.slice(0,5).map((l,i)=>`<div class="task-row"><span>${l.d}: <b>${l.v}kg</b></span><span onclick="delWeight(${i})" style="color:var(--red)">✕</span></div>`).join('');
+        document.getElementById('sport-history').innerHTML = db.fit.tasks.sort().reverse().slice(0,5).map(ds=>`<div class="task-row"><span>${ds}: <b>${db.fit.sportEntries[ds]||'Sport'}</b></span><span onclick="delSport('${ds}')" style="color:var(--red)">✕</span></div>`).join('');
+        document.getElementById('dj-list').innerHTML = db.lev.dj.map(d=>{
+            const isOld = (new Date() - new Date(d.d)) / 8.64e7 > 180;
+            return `<div class="card" style="${isOld?'border-color:var(--red)':''}"><b>${d.t}</b><br><small>${d.p}</small><br><button class="del-btn" onclick="delDJ(${d.id})">Verwijder</button></div>`;
+        }).join('');
     }
 
     function renderList() {
-        const q = document.getElementById('search').value.toLowerCase();
-        document.getElementById('list-container').innerHTML = db.people.filter(p => p.name.toLowerCase().includes(q))
-            .map(p => `<div style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:10px; border-left:4px solid var(--blue)" onclick="edit(${p.id})"><b>${p.name}</b></div>`).join('');
-    }
-
-    function edit(id) {
-        selId = id; const p = db.people.find(x => x.id === id);
-        ['name','next','ctx'].forEach(f => document.getElementById('c-'+f).value = p[f] || '');
-        show('crm');
+        const q = document.getElementById('q').value.toLowerCase();
+        document.getElementById('list-box').innerHTML = db.people.filter(p=>p.name.toLowerCase().includes(q)).map(p=>`<div class="list-item" onclick="edit(${p.id})"><b>${p.name}</b><br><small>${p.next||''}</small></div>`).join('');
     }
 
     function renderChart() {
         const ctx = document.getElementById('weightChart').getContext('2d');
         const data = [...db.fit.logs].reverse().slice(-7);
         if(myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: data.map(l => l.d), datasets: [{ data: data.map(l => l.v), borderColor: '#3b82f6', tension: 0.3, fill: false }] },
-            options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
-        });
+        myChart = new Chart(ctx, { type: 'line', data: { labels: data.map(l=>l.d), datasets: [{ data: data.map(l=>l.v), borderColor:'#3b82f6', tension:0.3, fill:false }] }, options: { plugins: { legend: { display: false } }, scales: { y:{display:false}, x:{grid:{display:false}} } } });
     }
 
     function exportData() { window.open("data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db))); }
-    function saveLev() { db.lev.focus[getWk()] = document.getElementById('l-8020').value; persist(); }
-
     window.onload = render;
 </script>
 </body>
