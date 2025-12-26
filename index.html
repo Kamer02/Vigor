@@ -3,519 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vigor V55 - Full Master</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <title>Vigor V55.2 - Full Control</title>
     <style>
         :root {
-            --bg-dark: #050505; --card-bg: #111111; --sidebar-bg: #0a0a0a;
-            --accent-blue: #3b82f6; --accent-orange: #ff6b00; --accent-emerald: #10b981;
-            --text-main: #ffffff; --text-dim: #888888; --danger: #ef4444;
+            --bg: #050505; --card: #111111; --blue: #3b82f6; --orange: #ff6b00; --green: #10b981; --text: #fff; --dim: #888; --red: #ef4444;
         }
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
         /* NAVIGATIE */
-        .nav-bar { 
-            position: fixed; top: 10px; left: 50%; transform: translateX(-50%); 
-            display: flex; background: rgba(30,30,30,0.95); backdrop-filter: blur(10px);
-            padding: 5px; border-radius: 14px; border: 1px solid #333; z-index: 10000; 
-            width: 94%; max-width: 500px; justify-content: space-around;
-        }
-        .nav-btn { flex: 1; padding: 12px 5px; border: none; background: transparent; color: #777; cursor: pointer; font-weight: 700; font-size: 0.75em; border-radius: 10px; transition: 0.2s; }
-        .nav-btn.active { background: var(--accent-blue); color: white; }
+        .nav { position: fixed; top: 0; width: 100%; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); display: flex; z-index: 1000; border-bottom: 1px solid #333; }
+        .nav-btn { flex: 1; padding: 18px 5px; background: none; border: none; color: var(--dim); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-btn.active { color: var(--blue); border-bottom: 3px solid var(--blue); }
 
         /* CONTENT */
-        .main-view { flex: 1; overflow-y: auto; padding: 85px 15px 100px; scroll-behavior: smooth; }
-        .view-pane { display: none; }
-        .view-pane.active { display: block; }
-
-        /* DRAWER */
-        .drawer { 
-            position: fixed; top: 0; right: 0; bottom: 0; width: 85%; 
-            background: var(--sidebar-bg); border-left: 1px solid #222; 
-            z-index: 10001; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 80px 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
-        }
-        .drawer.open { transform: translateX(0); }
-
-        /* COMPONENTS */
-        .card { background: var(--card-bg); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; }
-        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        label { display: block; font-size: 0.65em; color: var(--text-dim); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
-        .stat-val { font-size: 1.6em; font-weight: 900; }
-        input, textarea, select { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 10px; margin-bottom: 10px; font-size: 16px; }
-        .btn-full { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
+        .container { flex: 1; overflow-y: auto; padding: 80px 15px 100px; max-width: 600px; margin: 0 auto; width: 100%; }
+        .pane { display: none; }
+        .pane.active { display: block; }
         
-        /* TASK LISTS */
-        .task-row { display: flex; align-items: center; background: #1a1a1a; padding: 10px; border-radius: 8px; margin-bottom: 5px; border-left: 4px solid #444; font-size: 0.85em; }
-        .task-row.done { border-color: var(--accent-emerald); opacity: 0.5; text-decoration: line-through; }
+        /* UI ELEMENTS */
+        .card { background: var(--card); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-size: 10px; color: var(--dim); font-weight: 900; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .val { font-size: 26px; font-weight: 900; }
+        input, textarea, select { width: 100%; padding: 14px; background: #000; border: 1px solid #333; color: #fff; border-radius: 12px; margin-bottom: 12px; font-size: 16px; }
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
 
-        /* VITALITY MATRIX */
-        .matrix { display: grid; grid-template-columns: repeat(7, 1fr) 30px; gap: 4px; margin-top: 10px; }
-        .day-cell { background: #0a0a0a; border: 1px solid #222; border-radius: 4px; padding: 5px; min-height: 50px; text-align: center; font-size: 0.6em; position: relative; }
-        .day-cell.done { border-color: var(--accent-emerald); background: rgba(16, 185, 129, 0.1); }
-        .day-num { font-weight: 800; display: block; margin-bottom: 2px; }
+        /* MATRIX STYLE */
+        .matrix { display: grid; grid-template-columns: repeat(7, 1fr) 30px; gap: 5px; margin-top: 10px; }
+        .m-cell { background: #000; border: 1px solid #222; border-radius: 6px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
+        .m-cell.done { border-color: var(--green); background: rgba(16, 185, 129, 0.15); color: var(--green); }
+        .m-header { font-size: 8px; color: var(--dim); text-align: center; margin-bottom: 5px; }
 
-        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--accent-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 10002; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: none; color: white; font-size: 24px; }
+        /* DRAWER & FAB */
+        #drawer { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #0a0a0a; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 80px 20px; border-left: 1px solid #333; overflow-y: auto; }
+        #drawer.open { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--blue); border-radius: 50%; color: white; border: none; font-size: 24px; z-index: 1500; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        
+        .task-item { display: flex; align-items: center; background: #1a1a1a; padding: 12px; border-radius: 10px; margin-top: 8px; border-left: 4px solid #444; }
+        .task-item.done { border-color: var(--green); opacity: 0.5; text-decoration: line-through; }
     </style>
 </head>
 <body>
 
-    <nav class="nav-bar">
-        <button class="nav-btn active" id="nb-home">HUB</button>
-        <button class="nav-btn" id="nb-crm">NETWORK</button>
-        <button class="nav-btn" id="nb-fit">VITALITY</button>
-        <button class="nav-btn" id="nb-lev">LEV</button>
-    </nav>
+    <div class="nav">
+        <button id="n-hub" class="nav-btn active" onclick="go('hub')">Hub</button>
+        <button id="n-crm" class="nav-btn" onclick="go('crm')">Network</button>
+        <button id="n-fit" class="nav-btn" onclick="go('fit')">Vitality</button>
+        <button id="n-lev" class="nav-btn" onclick="go('lev')">Leverage</button>
+    </div>
 
-    <button class="fab" id="fab-menu">☰</button>
+    <button class="fab" onclick="toggleDrawer()">☰</button>
 
-    <main class="main-view">
-        <div id="v-home" class="view-pane active">
-            <h1 style="margin-top:0">Command <span style="color:var(--accent-blue)">Hub</span></h1>
-            <div class="grid-stats">
-                <div class="card"><label>Dossiers</label><div class="stat-val" id="st-n">0</div></div>
-                <div class="card"><label>Vitality</label><div class="stat-val" id="st-v">0%</div></div>
-                <div class="card"><label>Streak</label><div class="stat-val" id="st-s">0</div></div>
-                <div class="card"><label>Gewicht</label><div class="stat-val" id="st-w">0</div></div>
+    <div class="container">
+        <div id="p-hub" class="pane active">
+            <h1 style="margin-top:0">Hub</h1>
+            <div class="grid">
+                <div class="card"><label>Dossiers</label><div class="val" id="st-n">0</div></div>
+                <div class="card"><label>Vitality</label><div class="val" id="st-v" style="color:var(--green)">0%</div></div>
+                <div class="card"><label>Gewicht</label><div class="val" id="st-w">0</div></div>
+                <div class="card"><label>Week</label><div class="val" id="st-wk">0</div></div>
             </div>
-            <div class="card" style="border-left: 5px solid var(--accent-orange)">
-                <label style="color:var(--accent-orange)">Actuele Weekfocus (80/20)</label>
-                <div id="dash-focus" style="font-weight:700; font-size:1.1em; margin-top:5px">---</div>
+            <div id="bday-zone"></div>
+            <div class="card" style="border-left: 5px solid var(--orange)">
+                <label style="color:var(--orange)">Focus 80/20</label>
+                <div id="st-focus" style="font-weight:bold; font-size:1.2em; margin-top:5px">---</div>
             </div>
-            <div class="card"><label>Trend</label><canvas id="mainChart" height="150"></canvas></div>
-            <div id="bday-alert"></div>
         </div>
 
-        <div id="v-crm" class="view-pane">
-            <h2 id="crm-header">Relatie Dossier</h2>
+        <div id="p-crm" class="pane">
+            <h2 id="crm-head">Dossier</h2>
             <div class="card">
-                <label>Naam</label><input type="text" id="p-name" oninput="CRM.save()">
-                <label>Categorie</label><input type="text" id="p-cat" oninput="CRM.save()" placeholder="Zakelijk, Vrienden, etc.">
-                <label>Geboortedatum</label><input type="date" id="p-dob" onchange="CRM.save()">
-                <label style="color:var(--accent-orange)">Strategic Next Step</label>
-                <textarea id="p-next" oninput="CRM.save()" style="border-color:var(--accent-orange)"></textarea>
+                <label>Naam</label><input type="text" id="c-name" oninput="save()">
+                <label style="color:var(--orange)">Strategic Next Step</label>
+                <textarea id="c-next" oninput="save()" style="border-color:var(--orange); height:80px"></textarea>
+                <label>Geboortedatum</label><input type="date" id="c-dob" onchange="save()">
+                <label>Context / Info</label><textarea id="c-ctx" oninput="save()"></textarea>
                 
-                <div id="p-detail-fields">
-                    <label>Werk/Context</label><textarea id="p-werk" oninput="CRM.save()"></textarea>
-                    <label>Hobby's/Privé</label><textarea id="p-prive" oninput="CRM.save()"></textarea>
-                </div>
-
-                <div id="p-task-section" style="margin-top:15px; border-top:1px solid #333; padding-top:15px; display:none;">
-                    <label>Dossier Acties (Enter)</label>
-                    <input type="text" id="p-task-in" placeholder="+ Actie toevoegen" onkeydown="if(event.key==='Enter') CRM.addTask()">
-                    <div id="p-task-list"></div>
+                <div id="task-zone" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:15px">
+                    <label>Acties (Druk Enter)</label>
+                    <input type="text" id="t-in" placeholder="+ Nieuwe actie..." onkeydown="if(event.key==='Enter') addTask()">
+                    <div id="t-list"></div>
                 </div>
             </div>
-            <button class="btn-full" style="background:#222; color:white" onclick="CRM.reset()">+ NIEUW DOSSIER</button>
+            <button class="btn" style="background:#222; color:#fff" onclick="resetCRM()">+ NIEUW DOSSIER</button>
         </div>
 
-        <div id="v-fit" class="view-pane">
-            <h2>Vitality Matrix</h2>
+        <div id="p-fit" class="pane">
+            <h2>Vitality</h2>
             <div class="card">
-                <label>Weging (KG)</label>
-                <input type="number" id="w-in" step="0.1" placeholder="85.0" onkeydown="if(event.key==='Enter') FIT.logWeight()">
+                <label>Doel: <span id="target-val">3</span>x p/week sporten</label>
+                <input type="range" id="target-range" min="1" max="7" value="3" oninput="setTarget(this.value)">
             </div>
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center">
-                    <label>Weekdoel: <span id="target-val">3</span>x sporten</label>
-                    <input type="range" id="target-range" min="1" max="7" step="1" style="width:100px" oninput="FIT.setTarget(this.value)">
-                </div>
+                <label>Log Gewicht</label>
+                <input type="number" id="w-in" step="0.1" onkeydown="if(event.key==='Enter') logWeight()">
             </div>
-            <div id="matrix-container"></div>
+            <div id="matrix-zone"></div>
         </div>
 
-        <div id="v-lev" class="view-pane">
-            <h2>Leverage Log</h2>
-            <div class="card" style="border-left: 5px solid var(--accent-emerald)">
-                <label>Wekelijkse 80/20 Analyse</label>
-                <textarea id="lev-8020" oninput="LEV.save()" style="height:100px"></textarea>
+        <div id="p-lev" class="pane">
+            <h2>Leverage</h2>
+            <div class="card">
+                <label>Weekanalyse (80/20 Focus)</label>
+                <textarea id="l-8020" oninput="saveLev()" style="height:120px" placeholder="Wat is deze week de hefboom?"></textarea>
             </div>
             <div class="card">
                 <label>Decision Journal</label>
-                <input type="text" id="dj-title" placeholder="Besluit titel...">
-                <textarea id="dj-pred" placeholder="Wat voorspel je als uitkomst?"></textarea>
-                <button class="btn-full" style="background:var(--accent-emerald); color:black" onclick="LEV.addDecision()">LOG BESLUIT</button>
-                <div id="dj-list" style="margin-top:10px"></div>
+                <input type="text" id="dj-t" placeholder="Besluit...">
+                <textarea id="dj-p" placeholder="Voorspelling..."></textarea>
+                <button class="btn" style="background:var(--green); color:#000" onclick="addDJ()">LOG BESLUIT</button>
+                <div id="dj-list" style="margin-top:15px"></div>
             </div>
             <div class="card">
-                <label>Systeem & Data</label>
-                <button class="btn-full" style="background:var(--accent-blue); color:white" onclick="DATA.export()">💾 DOWNLOAD BACKUP</button>
-                <button class="btn-full" style="background:#222; color:white" onclick="document.getElementById('imp').click()">📂 IMPORT DATA</button>
-                <input type="file" id="imp" style="display:none" onchange="DATA.import(event)">
+                <label>Data Management</label>
+                <button class="btn" style="background:var(--blue); color:#fff" onclick="exportData()">💾 DOWNLOAD BACKUP</button>
             </div>
         </div>
-    </main>
+    </div>
 
-    <div id="drawer" class="drawer">
+    <div id="drawer">
         <label>Zoeken</label>
-        <input type="text" id="search" placeholder="Naam contact..." onkeyup="UI.render()">
-        <div id="crm-list-drawer"></div>
-        <button class="btn-full" id="close-drawer" style="background:#222; color:white; margin-top:20px">SLUIT MENU</button>
+        <input type="text" id="search" placeholder="Naam..." onkeyup="renderList()">
+        <div id="list-box"></div>
+        <button class="btn" style="background:#222; color:#fff; margin-top:20px" onclick="toggleDrawer()">SLUITEN</button>
     </div>
 
 <script>
-    // --- DATABASE & STATE ---
-    let STATE = {
-        view: 'home',
-        selId: null,
-        db: JSON.parse(localStorage.getItem('vigor_v55')) || {
-            people: [],
-            fit: { target: 3, logs: [], tasks: [] },
-            lev: { 8020: {}, decisions: [] }
-        }
-    };
+    let db = JSON.parse(localStorage.getItem('vigor_v55')) || { people: [], fit: { target: 3, logs: [], tasks: [] }, lev: { focus: {}, dj: [] } };
+    let selId = null;
 
-    const SYSTEM = {
-        save: () => { localStorage.setItem('vigor_v55', JSON.stringify(STATE.db)); UI.render(); },
-        getWeek: () => {
-            const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 4 - (d.getDay()||7));
-            return Math.ceil((((d - new Date(d.getFullYear(),0,1)) / 8.64e7) + 1));
-        }
-    };
+    function getWk() {
+        const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 4 - (d.getDay()||7));
+        return Math.ceil((((d - new Date(d.getFullYear(),0,1)) / 8.64e7) + 1));
+    }
 
-    // --- MODULES ---
-    const CRM = {
-        save: () => {
-            const n = document.getElementById('p-name').value; if(!n) return;
-            let p = STATE.selId ? STATE.db.people.find(x => x.id === STATE.selId) : null;
-            if(!p) { p = { id: Date.now(), tasks: [] }; STATE.db.people.push(p); STATE.selId = p.id; }
-            ['name','cat','dob','next','werk','prive'].forEach(f => p[f] = document.getElementById('p-'+f).value);
-            SYSTEM.save();
-        },
-        edit: (id) => {
-            STATE.selId = id; const p = STATE.db.people.find(x => x.id === id);
-            ['name','cat','dob','next','werk','prive'].forEach(f => document.getElementById('p-'+f).value = p[f] || '');
-            document.getElementById('p-task-section').style.display = 'block';
-            CRM.renderTasks();
-            UI.nav('crm');
-        },
-        reset: () => { STATE.selId = null; document.querySelectorAll('#v-crm input, #v-crm textarea').forEach(i => i.value=''); document.getElementById('p-task-section').style.display = 'none'; UI.nav('crm'); },
-        addTask: () => {
-            const i = document.getElementById('p-task-in'); if(!i.value) return;
-            STATE.db.people.find(x => x.id === STATE.selId).tasks.push({id: Date.now(), txt: i.value, done: false});
-            i.value = ''; CRM.renderTasks(); SYSTEM.save();
-        },
-        renderTasks: () => {
-            const p = STATE.db.people.find(x => x.id === STATE.selId);
-            document.getElementById('p-task-list').innerHTML = p.tasks.map(t => `<div class="task-row ${t.done?'done':''}" onclick="CRM.toggleTask(${t.id})">${t.txt}</div>`).join('');
-        },
-        toggleTask: (tid) => {
-            const p = STATE.db.people.find(x => x.id === STATE.selId);
-            const t = p.tasks.find(x => x.id === tid); t.done = !t.done;
-            if(t.done) confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
-            CRM.renderTasks(); SYSTEM.save();
-        }
-    };
+    function save() {
+        if (!selId && !document.getElementById('c-name').value) return;
+        let p = db.people.find(x => x.id === selId);
+        if (!p) { p = { id: Date.now(), tasks: [] }; db.people.push(p); selId = p.id; }
+        ['name','next','ctx','dob'].forEach(f => p[f] = document.getElementById('c-'+f).value);
+        persist();
+    }
 
-    const FIT = {
-        logWeight: () => {
-            const v = document.getElementById('w-in').value; if(!v) return;
-            STATE.db.fit.logs.unshift({v: parseFloat(v), d: new Date().toLocaleDateString()});
-            document.getElementById('w-in').value = ''; SYSTEM.save();
-        },
-        setTarget: (v) => { STATE.db.fit.target = v; document.getElementById('target-val').innerText = v; SYSTEM.save(); },
-        toggleDay: (dateStr) => {
-            const idx = STATE.db.fit.tasks.indexOf(dateStr);
-            if(idx > -1) STATE.db.fit.tasks.splice(idx,1); else STATE.db.fit.tasks.push(dateStr);
-            SYSTEM.save();
-        }
-    };
+    function persist() { localStorage.setItem('vigor_v55', JSON.stringify(db)); render(); }
 
-    const LEV = {
-        save: () => { 
-            STATE.db.lev.8020[SYSTEM.getWeek()] = document.getElementById('lev-8020').value; 
-            SYSTEM.save(); 
-        },
-        addDecision: () => {
-            const t = document.getElementById('dj-title').value; if(!t) return;
-            STATE.db.lev.decisions.unshift({id: Date.now(), t, p: document.getElementById('dj-pred').value, d: new Date().toISOString()});
-            document.getElementById('dj-title').value = ''; document.getElementById('dj-pred').value = ''; SYSTEM.save();
-        }
-    };
+    function go(pane) {
+        document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('p-' + pane).classList.add('active');
+        document.getElementById('n-' + pane).classList.add('active');
+        toggleDrawer(false); render();
+    }
 
-    // --- UI ENGINE ---
-    const UI = {
-        init: () => {
-            document.getElementById('nb-home').onclick = () => UI.nav('home');
-            document.getElementById('nb-crm').onclick = () => UI.nav('crm');
-            document.getElementById('nb-fit').onclick = () => UI.nav('fit');
-            document.getElementById('nb-lev').onclick = () => UI.nav('lev');
-            document.getElementById('fab-menu').onclick = () => UI.toggleDrawer();
-            document.getElementById('close-drawer').onclick = () => UI.toggleDrawer();
-            UI.render();
-        },
-        nav: (v) => { STATE.view = v; document.getElementById('drawer').classList.remove('open'); UI.render(); },
-        toggleDrawer: () => document.getElementById('drawer').classList.toggle('open'),
-        render: () => {
-            document.querySelectorAll('.view-pane').forEach(p => p.classList.toggle('active', p.id === 'v-'+STATE.view));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.id === 'nb-'+STATE.view));
-            
-            // Dashboard
-            document.getElementById('st-n').innerText = STATE.db.people.length;
-            document.getElementById('st-w').innerText = STATE.db.fit.logs[0]?.v || 0;
-            document.getElementById('dash-focus').innerText = STATE.db.lev.8020[SYSTEM.getWeek()] || "Geen focus ingesteld.";
-            
-            // Drawer List
-            const q = document.getElementById('search').value.toLowerCase();
-            document.getElementById('crm-list-drawer').innerHTML = STATE.db.people
-                .filter(p => p.name.toLowerCase().includes(q))
-                .map(p => `<div class="card" style="padding:10px" onclick="CRM.edit(${p.id})"><b>${p.name}</b></div>`).join('');
+    function toggleDrawer(s) { const d = document.getElementById('drawer'); if(s===undefined) d.classList.toggle('open'); else if(s) d.classList.add('open'); else d.classList.remove('open'); }
 
-            // Matrix
-            UI.renderMatrix();
-            // Decisions (180 day alert)
-            UI.renderDecisions();
-        },
-        renderMatrix: () => {
-            const cont = document.getElementById('matrix-container');
-            let html = '<div class="matrix" style="font-size:0.5em; color:gray"><div>M</div><div>D</div><div>W</div><div>D</div><div>V</div><div>Z</div><div>Z</div><div>🏆</div></div>';
-            const today = new Date(); const start = new Date(); start.setDate(today.getDate() - today.getDay() + 1);
-            
-            for(let w=0; w<4; w++) {
-                html += '<div class="matrix">';
-                let doneInWeek = 0;
-                for(let d=0; d<7; d++) {
-                    let cur = new Date(start); cur.setDate(cur.getDate() + (w*7) + d);
-                    let ds = cur.toISOString().split('T')[0];
-                    let isDone = STATE.db.fit.tasks.includes(ds);
-                    if(isDone) doneInWeek++;
-                    html += `<div class="day-cell ${isDone?'done':''}" onclick="FIT.toggleDay('${ds}')"><span class="day-num">${cur.getDate()}</span></div>`;
-                }
-                html += `<div style="display:flex; align-items:center; justify-content:center; opacity:${doneInWeek>=STATE.db.fit.target?1:0.1}">🏆</div></div>`;
-                if(w===0) document.getElementById('st-v').innerText = Math.round((doneInWeek/STATE.db.fit.target)*100) + "%";
+    function render() {
+        const wk = getWk();
+        document.getElementById('st-n').innerText = db.people.length;
+        document.getElementById('st-w').innerText = db.fit.logs[0]?.v || 0;
+        document.getElementById('st-wk').innerText = wk;
+        document.getElementById('st-focus').innerText = db.lev.focus[wk] || "Nog geen focus.";
+        
+        // Birthday check
+        const today = new Date().toISOString().slice(5,10);
+        const bdays = db.people.filter(p => p.dob && p.dob.slice(5,10) === today);
+        document.getElementById('bday-zone').innerHTML = bdays.map(p => `<div class="card" style="background:var(--orange); color:white; font-weight:bold">🎂 Jarig: ${p.name}</div>`).join('');
+
+        renderList(); renderMatrix(); renderDJ();
+    }
+
+    function renderList() {
+        const q = document.getElementById('search').value.toLowerCase();
+        document.getElementById('list-box').innerHTML = db.people.filter(p => p.name.toLowerCase().includes(q)).map(p => `<div style="background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:8px; border-left:4px solid var(--blue)" onclick="edit(${p.id})"><b>${p.name}</b></div>`).join('');
+    }
+
+    function edit(id) {
+        selId = id; const p = db.people.find(x => x.id === id);
+        ['name','next','ctx','dob'].forEach(f => document.getElementById('c-'+f).value = p[f] || '');
+        document.getElementById('task-zone').style.display = 'block';
+        renderTasks(); go('crm');
+    }
+
+    function resetCRM() { selId = null; document.querySelectorAll('#p-crm input, #p-crm textarea').forEach(i => i.value=''); document.getElementById('task-zone').style.display = 'none'; }
+
+    function addTask() {
+        const i = document.getElementById('t-in'); const p = db.people.find(x => x.id === selId);
+        p.tasks.push({id: Date.now(), t: i.value, d: false}); i.value = ''; renderTasks(); persist();
+    }
+
+    function renderTasks() {
+        const p = db.people.find(x => x.id === selId);
+        document.getElementById('t-list').innerHTML = p.tasks.map(t => `<div class="task-item ${t.d?'done':''}" onclick="toggleT(${t.id})">${t.t}</div>`).join('');
+    }
+
+    function toggleT(tid) { const p = db.people.find(x => x.id === selId); const t = p.tasks.find(x => x.id === tid); t.d = !t.d; persist(); }
+
+    function setTarget(v) { db.fit.target = v; document.getElementById('target-val').innerText = v; persist(); }
+    
+    function logWeight() { const i = document.getElementById('w-in'); db.fit.logs.unshift({v: i.value, d: new Date().toLocaleDateString()}); i.value = ''; persist(); }
+
+    function toggleDay(ds) { const idx = db.fit.tasks.indexOf(ds); if(idx>-1) db.fit.tasks.splice(idx,1); else db.fit.tasks.push(ds); persist(); }
+
+    function renderMatrix() {
+        let html = '<div class="matrix m-header"><div>M</div><div>D</div><div>W</div><div>D</div><div>V</div><div>Z</div><div>Z</div><div></div></div>';
+        const start = new Date(); start.setDate(start.getDate() - start.getDay() + 1);
+        let weekDone = 0;
+        for(let w=0; w<4; w++) {
+            html += '<div class="matrix">';
+            let curDone = 0;
+            for(let d=0; d<7; d++) {
+                let cur = new Date(start); cur.setDate(cur.getDate() + (w*7) + d);
+                let ds = cur.toISOString().split('T')[0];
+                let done = db.fit.tasks.includes(ds);
+                if(done && w===0) weekDone++;
+                html += `<div class="m-cell ${done?'done':''}" onclick="toggleDay('${ds}')">${cur.getDate()}</div>`;
             }
-            cont.innerHTML = html;
-        },
-        renderDecisions: () => {
-            const now = new Date();
-            document.getElementById('dj-list').innerHTML = STATE.db.lev.decisions.map(d => {
-                const diff = (now - new Date(d.d)) / (1000*60*60*24);
-                return `<div class="card" style="font-size:0.8em; border-color:${diff > 180 ? 'var(--danger)' : '#333'}">
-                    <b>${d.t}</b><br><small>${new Date(d.d).toLocaleDateString()}</small>
-                    ${diff > 180 ? '<br><b style="color:var(--danger)">!!! REVIEW NODIG (180+ Dagen)</b>' : ''}
-                </div>`;
-            }).join('');
+            html += `<div style="display:flex; align-items:center; justify-content:center; font-size:14px">${weekDone>=db.fit.target?'🏆':''}</div></div>`;
         }
-    };
+        document.getElementById('matrix-zone').innerHTML = html;
+        document.getElementById('st-v').innerText = Math.round((weekDone/db.fit.target)*100) + "%";
+    }
 
-    const DATA = {
-        export: () => {
-            const blob = new Blob([JSON.stringify(STATE.db)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `vigor_${new Date().toISOString().split('T')[0]}.json`; a.click();
-        },
-        import: (e) => {
-            const r = new FileReader(); r.onload = (ev) => {
-                STATE.db = JSON.parse(ev.target.result); SYSTEM.save(); location.reload();
-            };
-            r.readAsText(e.target.files[0]);
-        }
-    };
+    function saveLev() { db.lev.focus[getWk()] = document.getElementById('l-8020').value; persist(); }
 
-    window.onload = UI.init;
-</script>
-</body>
-</html>
-        .view-pane { display: none; }
-        .view-pane.active { display: block; animation: fadeIn 0.2s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    function addDJ() {
+        db.lev.dj.unshift({id: Date.now(), t: document.getElementById('dj-t').value, p: document.getElementById('dj-p').value, d: new Date().toISOString()});
+        document.getElementById('dj-t').value = ''; document.getElementById('dj-p').value = ''; persist();
+    }
 
-        /* DRAWER (SIDEBAR RECHTS) */
-        .drawer { 
-            position: fixed; top: 0; right: 0; bottom: 0; width: 85%; 
-            background: var(--sidebar-bg); border-left: 1px solid #222; 
-            z-index: 10001; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 80px 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.7);
-        }
-        .drawer.open { transform: translateX(0); }
+    function renderDJ() {
+        document.getElementById('dj-list').innerHTML = db.lev.dj.map(d => {
+            const diff = (new Date() - new Date(d.d)) / 8.64e7;
+            return `<div class="card" style="font-size:0.8em; ${diff>180?'border-color:var(--red)':''}"><b>${d.t}</b><br><small>${new Date(d.d).toLocaleDateString()}</small></div>`;
+        }).join('');
+    }
 
-        /* UI COMPONENTS */
-        .card { background: var(--card-bg); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; }
-        .grid-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-        label { display: block; font-size: 0.65em; color: var(--text-dim); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
-        input, textarea { 
-            width: 100%; padding: 14px; background: #000; border: 1px solid #333; 
-            color: white; border-radius: 12px; margin-bottom: 12px; font-size: 16px; 
-        }
-        .stat-val { font-size: 1.8em; font-weight: 900; }
+    function exportData() {
+        const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
+        const a = document.createElement('a'); a.href = data; a.download = "vigor_backup.json"; a.click();
+    }
 
-        /* FLOATING ACTION BUTTON */
-        .fab { 
-            position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; 
-            background: var(--accent-blue); border-radius: 50%; display: flex; 
-            align-items: center; justify-content: center; z-index: 10002; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: none; color: white; font-size: 24px;
-        }
-    </style>
-</head>
-<body>
-
-    <nav class="nav-bar">
-        <button class="nav-btn active" id="nb-home" onclick="UI.nav('home')">HUB</button>
-        <button class="nav-btn" id="nb-crm" onclick="UI.nav('crm')">NETWORK</button>
-        <button class="nav-btn" id="nb-fit" onclick="UI.nav('fit')">VITALITY</button>
-        <button class="nav-btn" id="nb-lev" onclick="UI.nav('lev')">LEV</button>
-    </nav>
-
-    <button class="fab" onclick="UI.toggleDrawer()">☰</button>
-
-    <main class="main-view">
-        <div id="v-home" class="view-pane active">
-            <h1 style="margin-top:0">Command <span style="color:var(--accent-blue)">Hub</span></h1>
-            <div class="grid-stats">
-                <div class="card"><label>Dossiers</label><div class="stat-val" id="st-n">0</div></div>
-                <div class="card"><label>Vitality</label><div class="stat-val" id="st-v">0%</div></div>
-                <div class="card"><label>Streak</label><div class="stat-val" id="st-s">0</div></div>
-                <div class="card"><label>Gewicht</label><div class="stat-val" id="st-w">0</div></div>
-            </div>
-            <div class="card" style="border-left: 5px solid var(--accent-orange)">
-                <label style="color:var(--accent-orange)">Weekfocus (80/20)</label>
-                <div id="dash-focus" style="font-weight:700; font-size:1.1em; margin-top:5px">Stel focus in bij LEV</div>
-            </div>
-        </div>
-
-        <div id="v-crm" class="view-pane">
-            <h2>Network Dossier</h2>
-            <div class="card">
-                <label>Naam</label><input type="text" id="p-name" oninput="CRM.save()" placeholder="Naam contact...">
-                <label>Focus / Next Step</label>
-                <textarea id="p-next" oninput="CRM.save()" style="border-color:var(--accent-orange); height:80px" placeholder="Wat is de volgende actie?"></textarea>
-                <div id="p-tasks-area" style="display:none; margin-top:10px; border-top:1px solid #222; padding-top:15px">
-                    <label>Takenlijst (Enter)</label>
-                    <input type="text" id="p-task-in" placeholder="+ Actie toevoegen" onkeydown="if(event.key==='Enter') CRM.addTask()">
-                    <div id="p-task-list"></div>
-                </div>
-            </div>
-            <button onclick="CRM.reset()" style="width:100%; background:#222; color:white; border:none; padding:15px; border-radius:12px; font-weight:700">+ NIEUW CONTACT</button>
-        </div>
-
-        <div id="v-fit" class="view-pane">
-            <h2>Vitality Matrix</h2>
-            <div id="matrix-container"></div>
-        </div>
-
-        <div id="v-lev" class="view-pane">
-            <h2>Leverage Log</h2>
-            <div class="card"><label>80/20 Analyse Week</label><textarea id="lev-8020" oninput="LEV.save()" style="height:120px"></textarea></div>
-            <div class="card">
-                <label>Backup & Systeem</label>
-                <button onclick="DATA.export()" style="width:100%; background:var(--accent-blue); color:white; border:none; padding:12px; border-radius:8px; margin-bottom:10px">💾 BACKUP DOWNLOADEN</button>
-                <button onclick="document.getElementById('imp').click()" style="width:100%; background:#222; color:white; border:none; padding:12px; border-radius:8px">📂 HERSTEL DATA</button>
-                <input type="file" id="imp" style="display:none" onchange="DATA.import(event)">
-            </div>
-        </div>
-    </main>
-
-    <div id="drawer" class="drawer">
-        <div id="side-crm">
-            <label>Zoeken & Selecteren</label>
-            <input type="text" id="search" placeholder="Zoek op naam..." onkeyup="UI.render()">
-            <div id="crm-list" style="margin-top:10px"></div>
-        </div>
-        <div id="side-fit" style="display:none">
-            <label>Nieuwe Weging (KG)</label>
-            <input type="number" id="w-in" step="0.1" placeholder="Bijv: 85.5" onkeydown="if(event.key==='Enter') FIT.logWeight()">
-            <label>Historie</label>
-            <div id="w-history" style="font-size:0.8em; opacity:0.6"></div>
-        </div>
-        <button class="nav-btn" onclick="UI.toggleDrawer()" style="width:100%; margin-top:20px; background:#222; color:white">SLUIT MENU</button>
-    </div>
-
-<script>
-    let STATE = { 
-        view: 'home', 
-        selId: null, 
-        db: JSON.parse(localStorage.getItem('vigor_v54')) || { people: [], fit: { target: 3, logs: [], tasks: [] }, lev: { 8020: {} } } 
-    };
-
-    const UI = {
-        nav: (v) => { 
-            STATE.view = v; 
-            document.getElementById('drawer').classList.remove('open');
-            UI.render(); 
-        },
-        toggleDrawer: () => { document.getElementById('drawer').classList.toggle('open'); },
-        render: () => {
-            // Panes
-            document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
-            document.getElementById('v-' + STATE.view).classList.add('active');
-            
-            // Knoppen
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('nb-' + STATE.view).classList.add('active');
-
-            // Sidebars
-            document.getElementById('side-crm').style.display = (STATE.view === 'fit') ? 'none' : 'block';
-            document.getElementById('side-fit').style.display = (STATE.view === 'fit') ? 'block' : 'none';
-
-            CRM.renderList();
-            UI.renderStats();
-        },
-        renderStats: () => {
-            document.getElementById('st-n').innerText = STATE.db.people.length;
-            document.getElementById('st-w').innerText = STATE.db.fit.logs[0]?.val || 0;
-            const wk = new Date().toLocaleDateString('nl-NL', {week: 'numeric'});
-            document.getElementById('dash-focus').innerText = STATE.db.lev.8020[wk] || "Nog geen focus ingesteld.";
-        }
-    };
-
-    const CRM = {
-        save: () => {
-            const n = document.getElementById('p-name').value; if(!n) return;
-            let p = STATE.selId ? STATE.db.people.find(x => x.id === STATE.selId) : null;
-            if(!p) { p = { id: Date.now(), todos: [] }; STATE.db.people.push(p); STATE.selId = p.id; }
-            p.name = n; p.next = document.getElementById('p-next').value;
-            localStorage.setItem('vigor_v54', JSON.stringify(STATE.db));
-            UI.renderStats();
-        },
-        renderList: () => {
-            const q = document.getElementById('search').value.toLowerCase();
-            document.getElementById('crm-list').innerHTML = STATE.db.people
-                .filter(p => p.name.toLowerCase().includes(q))
-                .map(p => `<div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer" onclick="CRM.edit(${p.id})"><b>${p.name}</b></div>`).join('');
-        },
-        edit: (id) => { 
-            STATE.selId = id; 
-            const p = STATE.db.people.find(x => x.id === id);
-            document.getElementById('p-name').value = p.name;
-            document.getElementById('p-next').value = p.next || '';
-            document.getElementById('p-tasks-area').style.display = 'block';
-            UI.toggleDrawer();
-            UI.nav('crm');
-        },
-        reset: () => { STATE.selId = null; document.querySelectorAll('#v-crm input, #v-crm textarea').forEach(i => i.value=''); UI.nav('crm'); }
-    };
-
-    const FIT = {
-        logWeight: () => {
-            const v = document.getElementById('w-in').value; if(!v) return;
-            STATE.db.fit.logs.unshift({val: v, date: new Date().toLocaleDateString()}); 
-            document.getElementById('w-in').value = '';
-            localStorage.setItem('vigor_v54', JSON.stringify(STATE.db));
-            UI.render();
-        }
-    };
-
-    const DATA = {
-        export: () => {
-            const blob = new Blob([JSON.stringify(STATE.db)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'vigor_backup.json'; a.click();
-        },
-        import: (e) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                STATE.db = JSON.parse(ev.target.result);
-                localStorage.setItem('vigor_v54', JSON.stringify(STATE.db));
-                location.reload();
-            };
-            reader.readAsText(e.target.files[0]);
-        }
-    };
-
-    window.onload = UI.render;
+    window.onload = render;
 </script>
 </body>
 </html>
