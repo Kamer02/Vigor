@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vigor V54 - Mobile Responsive</title>
+    <title>Vigor V54.1</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     
@@ -13,157 +13,167 @@
             --accent-blue: #3b82f6; --accent-orange: #ff6b00; --accent-emerald: #10b981;
             --text-main: #ffffff; --text-dim: #888888;
         }
-        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg-dark); color: var(--text-main); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* RESPONSIVE LAYOUT ENGINE */
-        .app-container { display: flex; flex: 1; overflow: hidden; position: relative; }
-        
-        .sidebar-l { width: 260px; background: var(--sidebar-bg); border-right: 1px solid #222; padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
-        .main-view { flex: 1; padding: 20px; overflow-y: auto; padding-top: 80px; }
-        
-        /* SIDEBAR R (DYNAMISCH) */
-        .sidebar-r { 
-            width: 320px; background: var(--sidebar-bg); border-left: 1px solid #222; padding: 20px; 
-            padding-top: 80px; position: relative; transition: transform 0.3s ease;
+        /* NAVIGATIE BALK */
+        .nav-bar { 
+            position: fixed; top: 10px; left: 50%; transform: translateX(-50%); 
+            display: flex; background: rgba(26,26,26,0.9); backdrop-filter: blur(10px);
+            padding: 4px; border-radius: 14px; border: 1px solid #333; z-index: 10000; 
+            width: 92%; max-width: 500px; justify-content: space-between;
         }
-
-        /* MOBIEL SPECIFIEKE CSS */
-        @media (max-width: 900px) {
-            .sidebar-l { display: none; } /* Verberg linker sidebar op mobiel voor focus */
-            .sidebar-r { 
-                position: absolute; right: 0; top: 0; bottom: 0; z-index: 1000; 
-                transform: translateX(100%); width: 85%; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
-            }
-            .sidebar-r.open { transform: translateX(0); }
-            .main-view { padding: 80px 15px 100px 15px; }
-            .grid-stats { grid-template-columns: 1fr 1fr !important; }
+        .nav-btn { 
+            flex: 1; padding: 12px 5px; border: none; background: transparent; 
+            color: #666; cursor: pointer; font-weight: 700; font-size: 0.75em; border-radius: 10px; 
         }
-
-        /* NAVIGATIE */
-        .nav-bar { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); display: flex; background: #1a1a1a; padding: 5px; border-radius: 12px; border: 1px solid #333; z-index: 10000; gap: 5px; width: 90%; max-width: 400px; justify-content: space-around; }
-        .nav-btn { flex: 1; padding: 10px 5px; border: none; background: transparent; color: #888; cursor: pointer; font-weight: 700; font-size: 0.75em; border-radius: 8px; text-align: center; }
         .nav-btn.active { background: var(--accent-blue); color: white; }
 
-        /* FLOATING TOGGLE VOOR SIDEBAR R */
-        .toggle-r { 
-            position: fixed; bottom: 20px; right: 20px; width: 56px; height: 56px; 
-            background: var(--accent-blue); border-radius: 50%; display: flex; 
-            align-items: center; justify-content: center; z-index: 10001; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: none; color: white; cursor: pointer;
+        /* CONTENT AREA */
+        .main-view { 
+            flex: 1; overflow-y: auto; padding: 80px 20px 100px; 
+            -webkit-overflow-scrolling: touch; 
         }
-
-        /* UI ELEMENTS */
-        .card { background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 15px; }
-        .grid-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        label { display: block; font-size: 0.6em; color: var(--text-dim); font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
-        input, textarea { width: 100%; padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin-bottom: 10px; font-size: 16px; } /* 16px voorkomt inzoomen op iOS */
-        
         .view-pane { display: none; }
-        .view-pane.active { display: block; }
-        
-        /* VITALITY MATRIX MOBIEL */
-        .matrix { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
-        .day-cell { background: #0a0a0a; border: 1px solid #222; border-radius: 4px; padding: 4px; min-height: 60px; font-size: 0.6em; }
-        .day-cell.done { border-color: var(--accent-emerald); background: rgba(16, 185, 129, 0.1); }
+        .view-pane.active { display: block; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* DRAWER (SIDEBAR RECHTS) */
+        .drawer { 
+            position: fixed; top: 0; right: 0; bottom: 0; width: 85%; 
+            background: var(--sidebar-bg); border-left: 1px solid #222; 
+            z-index: 10001; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 80px 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.7);
+        }
+        .drawer.open { transform: translateX(0); }
+
+        /* UI COMPONENTS */
+        .card { background: var(--card-bg); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; }
+        .grid-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+        label { display: block; font-size: 0.65em; color: var(--text-dim); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
+        input, textarea { 
+            width: 100%; padding: 14px; background: #000; border: 1px solid #333; 
+            color: white; border-radius: 12px; margin-bottom: 12px; font-size: 16px; 
+        }
+        .stat-val { font-size: 1.8em; font-weight: 900; }
+
+        /* FLOATING ACTION BUTTON */
+        .fab { 
+            position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; 
+            background: var(--accent-blue); border-radius: 50%; display: flex; 
+            align-items: center; justify-content: center; z-index: 10002; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: none; color: white; font-size: 24px;
+        }
     </style>
 </head>
 <body>
 
-    <div class="nav-bar">
-        <button class="nav-btn active" onclick="UI.nav('home')">Hub</button>
-        <button class="nav-btn" onclick="UI.nav('crm')">Network</button>
-        <button class="nav-btn" onclick="UI.nav('fit')">Vitality</button>
-        <button class="nav-btn" onclick="UI.nav('lev')">Lev</button>
-    </div>
+    <nav class="nav-bar">
+        <button class="nav-btn active" id="nb-home" onclick="UI.nav('home')">HUB</button>
+        <button class="nav-btn" id="nb-crm" onclick="UI.nav('crm')">NETWORK</button>
+        <button class="nav-btn" id="nb-fit" onclick="UI.nav('fit')">VITALITY</button>
+        <button class="nav-btn" id="nb-lev" onclick="UI.nav('lev')">LEV</button>
+    </nav>
 
-    <button class="toggle-r" onclick="UI.toggleSidebar()">☰</button>
+    <button class="fab" onclick="UI.toggleDrawer()">☰</button>
 
-    <div class="app-container">
-        <aside class="sidebar-l">
-            <label>Backup</label>
-            <button onclick="DATA.export()" class="nav-btn active" style="margin-bottom:10px; width:100%">💾 Export</button>
-            <label>Verjaardagen</label>
-            <div id="bday-list" style="font-size:0.8em"></div>
-        </aside>
-
-        <main class="main-view">
-            <div id="v-home" class="view-pane active">
-                <div class="grid-stats">
-                    <div class="card"><label>Dossiers</label><div id="st-n">0</div></div>
-                    <div class="card"><label>Vitality</label><div id="st-v">0%</div></div>
-                    <div class="card"><label>Streak</label><div id="st-s">0</div></div>
-                    <div class="card"><label>KG</label><div id="st-w">0</div></div>
-                </div>
-                <div class="card" style="border-left: 4px solid var(--accent-orange)">
-                    <label>Weekfocus</label>
-                    <div id="dash-focus" style="font-weight:bold">---</div>
-                </div>
+    <main class="main-view">
+        <div id="v-home" class="view-pane active">
+            <h1 style="margin-top:0">Command <span style="color:var(--accent-blue)">Hub</span></h1>
+            <div class="grid-stats">
+                <div class="card"><label>Dossiers</label><div class="stat-val" id="st-n">0</div></div>
+                <div class="card"><label>Vitality</label><div class="stat-val" id="st-v">0%</div></div>
+                <div class="card"><label>Streak</label><div class="stat-val" id="st-s">0</div></div>
+                <div class="card"><label>Gewicht</label><div class="stat-val" id="st-w">0</div></div>
             </div>
+            <div class="card" style="border-left: 5px solid var(--accent-orange)">
+                <label style="color:var(--accent-orange)">Weekfocus (80/20)</label>
+                <div id="dash-focus" style="font-weight:700; font-size:1.1em; margin-top:5px">Stel focus in bij LEV</div>
+            </div>
+        </div>
 
-            <div id="v-crm" class="view-pane">
-                <div class="card">
-                    <label>Naam</label><input type="text" id="p-name" oninput="CRM.save()">
-                    <label>Focus / Next Step</label><textarea id="p-next" oninput="CRM.save()" style="border-color:var(--accent-orange)"></textarea>
-                    <div id="p-tasks-area" style="display:none">
-                        <label>Taken</label>
-                        <input type="text" id="p-task-in" placeholder="+ Actie" onkeydown="if(event.key==='Enter') CRM.addTask()">
-                        <div id="p-task-list"></div>
-                    </div>
+        <div id="v-crm" class="view-pane">
+            <h2>Network Dossier</h2>
+            <div class="card">
+                <label>Naam</label><input type="text" id="p-name" oninput="CRM.save()" placeholder="Naam contact...">
+                <label>Focus / Next Step</label>
+                <textarea id="p-next" oninput="CRM.save()" style="border-color:var(--accent-orange); height:80px" placeholder="Wat is de volgende actie?"></textarea>
+                <div id="p-tasks-area" style="display:none; margin-top:10px; border-top:1px solid #222; padding-top:15px">
+                    <label>Takenlijst (Enter)</label>
+                    <input type="text" id="p-task-in" placeholder="+ Actie toevoegen" onkeydown="if(event.key==='Enter') CRM.addTask()">
+                    <div id="p-task-list"></div>
                 </div>
             </div>
+            <button onclick="CRM.reset()" style="width:100%; background:#222; color:white; border:none; padding:15px; border-radius:12px; font-weight:700">+ NIEUW CONTACT</button>
+        </div>
 
-            <div id="v-fit" class="view-pane">
-                <div id="matrix-container"></div>
-            </div>
+        <div id="v-fit" class="view-pane">
+            <h2>Vitality Matrix</h2>
+            <div id="matrix-container"></div>
+        </div>
 
-            <div id="v-lev" class="view-pane">
-                <div class="card"><label>80/20 Analyse</label><textarea id="lev-8020" oninput="LEV.save()"></textarea></div>
+        <div id="v-lev" class="view-pane">
+            <h2>Leverage Log</h2>
+            <div class="card"><label>80/20 Analyse Week</label><textarea id="lev-8020" oninput="LEV.save()" style="height:120px"></textarea></div>
+            <div class="card">
+                <label>Backup & Systeem</label>
+                <button onclick="DATA.export()" style="width:100%; background:var(--accent-blue); color:white; border:none; padding:12px; border-radius:8px; margin-bottom:10px">💾 BACKUP DOWNLOADEN</button>
+                <button onclick="document.getElementById('imp').click()" style="width:100%; background:#222; color:white; border:none; padding:12px; border-radius:8px">📂 HERSTEL DATA</button>
+                <input type="file" id="imp" style="display:none" onchange="DATA.import(event)">
             </div>
-        </main>
+        </div>
+    </main>
 
-        <aside id="sidebar-r" class="sidebar-r">
-            <div id="side-crm">
-                <input type="text" id="search" placeholder="Zoek dossier..." onkeyup="UI.render()">
-                <div id="crm-list"></div>
-            </div>
-            <div id="side-fit" style="display:none">
-                <label>Log Gewicht</label>
-                <input type="number" id="w-in" step="0.1" onkeydown="if(event.key==='Enter') FIT.logWeight()">
-                <div id="w-history"></div>
-            </div>
-            <button class="nav-btn" onclick="UI.toggleSidebar()" style="width:100%; margin-top:20px; background:#222">Sluit Menu</button>
-        </aside>
+    <div id="drawer" class="drawer">
+        <div id="side-crm">
+            <label>Zoeken & Selecteren</label>
+            <input type="text" id="search" placeholder="Zoek op naam..." onkeyup="UI.render()">
+            <div id="crm-list" style="margin-top:10px"></div>
+        </div>
+        <div id="side-fit" style="display:none">
+            <label>Nieuwe Weging (KG)</label>
+            <input type="number" id="w-in" step="0.1" placeholder="Bijv: 85.5" onkeydown="if(event.key==='Enter') FIT.logWeight()">
+            <label>Historie</label>
+            <div id="w-history" style="font-size:0.8em; opacity:0.6"></div>
+        </div>
+        <button class="nav-btn" onclick="UI.toggleDrawer()" style="width:100%; margin-top:20px; background:#222; color:white">SLUIT MENU</button>
     </div>
 
 <script>
-    // DEZELFDE LOGICA ALS V53 MAAR MET UI UPDATES
-    let STATE = { view: 'home', selId: null, db: JSON.parse(localStorage.getItem('vigor_v54')) || { people: [], fit: { target: 3, logs: [], tasks: [] }, lev: { 8020: {} } } };
+    let STATE = { 
+        view: 'home', 
+        selId: null, 
+        db: JSON.parse(localStorage.getItem('vigor_v54')) || { people: [], fit: { target: 3, logs: [], tasks: [] }, lev: { 8020: {} } } 
+    };
 
     const UI = {
         nav: (v) => { 
             STATE.view = v; 
-            document.getElementById('sidebar-r').classList.remove('open'); // Sluit sidebar bij navigatie
+            document.getElementById('drawer').classList.remove('open');
             UI.render(); 
         },
-        toggleSidebar: () => { document.getElementById('sidebar-r').classList.toggle('open'); },
+        toggleDrawer: () => { document.getElementById('drawer').classList.toggle('open'); },
         render: () => {
+            // Panes
             document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
             document.getElementById('v-' + STATE.view).classList.add('active');
             
+            // Knoppen
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            event?.target?.classList?.add('active'); // Simpele highlight
+            document.getElementById('nb-' + STATE.view).classList.add('active');
 
+            // Sidebars
             document.getElementById('side-crm').style.display = (STATE.view === 'fit') ? 'none' : 'block';
             document.getElementById('side-fit').style.display = (STATE.view === 'fit') ? 'block' : 'none';
 
             CRM.renderList();
-            FIT.renderMatrix();
             UI.renderStats();
         },
         renderStats: () => {
             document.getElementById('st-n').innerText = STATE.db.people.length;
             document.getElementById('st-w').innerText = STATE.db.fit.logs[0]?.val || 0;
+            const wk = new Date().toLocaleDateString('nl-NL', {week: 'numeric'});
+            document.getElementById('dash-focus').innerText = STATE.db.lev.8020[wk] || "Nog geen focus ingesteld.";
         }
     };
 
@@ -174,226 +184,54 @@
             if(!p) { p = { id: Date.now(), todos: [] }; STATE.db.people.push(p); STATE.selId = p.id; }
             p.name = n; p.next = document.getElementById('p-next').value;
             localStorage.setItem('vigor_v54', JSON.stringify(STATE.db));
+            UI.renderStats();
         },
         renderList: () => {
             const q = document.getElementById('search').value.toLowerCase();
             document.getElementById('crm-list').innerHTML = STATE.db.people
                 .filter(p => p.name.toLowerCase().includes(q))
-                .map(p => `<div class="card" onclick="CRM.edit(${p.id})">${p.name}</div>`).join('');
+                .map(p => `<div class="card" style="padding:12px; margin-bottom:8px; cursor:pointer" onclick="CRM.edit(${p.id})"><b>${p.name}</b></div>`).join('');
         },
         edit: (id) => { 
             STATE.selId = id; 
             const p = STATE.db.people.find(x => x.id === id);
             document.getElementById('p-name').value = p.name;
             document.getElementById('p-next').value = p.next || '';
-            UI.toggleSidebar();
+            document.getElementById('p-tasks-area').style.display = 'block';
+            UI.toggleDrawer();
             UI.nav('crm');
-        }
+        },
+        reset: () => { STATE.selId = null; document.querySelectorAll('#v-crm input, #v-crm textarea').forEach(i => i.value=''); UI.nav('crm'); }
     };
 
     const FIT = {
-        renderMatrix: () => {
-            let html = '<div class="matrix">';
-            for(let i=0; i<28; i++) html += `<div class="day-cell"></div>`;
-            document.getElementById('matrix-container').innerHTML = html + '</div>';
-        },
         logWeight: () => {
             const v = document.getElementById('w-in').value; if(!v) return;
-            STATE.db.fit.logs.unshift({val: v}); 
+            STATE.db.fit.logs.unshift({val: v, date: new Date().toLocaleDateString()}); 
+            document.getElementById('w-in').value = '';
             localStorage.setItem('vigor_v54', JSON.stringify(STATE.db));
             UI.render();
         }
     };
 
-    window.onload = UI.render;
-</script>
-</body>
-</html>
-
-        /* VITALITY GRID */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr) 40px; gap: 8px; }
-        .cal-day { background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 8px; min-height: 100px; cursor: pointer; }
-        .cal-day.day-done { border-color: var(--accent-emerald); background: rgba(16, 185, 129, 0.05); }
-        .task-row { font-size: 0.75em; background: #1a1a1a; padding: 4px; margin-top: 4px; border-radius: 4px; border-left: 3px solid #444; }
-        .task-row.done { border-left-color: var(--accent-emerald); opacity: 0.4; }
-    </style>
-</head>
-<body>
-
-    <div class="nav-tabs">
-        <button id="btn-home" class="tab-btn active" onclick="nav('home')">1. Dashboard</button>
-        <button id="btn-crm" class="tab-btn" onclick="nav('crm')">2. Network</button>
-        <button id="btn-fit" class="tab-btn" onclick="nav('fit')">3. Vitality</button>
-        <button id="btn-lev" class="tab-btn" onclick="nav('lev')">4. Leverage</button>
-    </div>
-
-    <div class="sidebar-left">
-        <label>Systeem</label>
-        <button onclick="exportData()" style="width:100%; background:var(--accent-blue); color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; font-weight:bold">💾 BACKUP NU</button>
-        <input type="file" id="imp" style="display:none" onchange="importData(event)">
-        <button onclick="document.getElementById('imp').click()" style="width:100%; background:#222; color:white; border:none; padding:10px; border-radius:8px; cursor:pointer; margin-top:10px">📂 HERSTEL DATA</button>
-        
-        <label style="margin-top:40px">🎂 Verjaardagen</label>
-        <div id="bday-list" style="font-size:0.8em"></div>
-    </div>
-
-    <div class="main-content">
-        <div id="view-home" class="view active">
-            <h1>Command <span style="color:var(--accent-blue)">Hub</span></h1>
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px">
-                <div class="detail-card"><label>Dossiers</label><div id="st-n" style="font-size:2em; font-weight:900">0</div></div>
-                <div class="detail-card"><label>Vitality</label><div id="st-v" style="font-size:2em; font-weight:900">0%</div></div>
-                <div class="detail-card"><label>Streak</label><div id="st-s" style="font-size:2em; font-weight:900">0</div></div>
-                <div class="detail-card"><label>Gewicht</label><div id="st-w" style="font-size:2em; font-weight:900">0</div></div>
-            </div>
-            <div class="detail-card" style="border-left: 5px solid var(--accent-orange)">
-                <label style="color:var(--accent-orange)">Actuele Weekfocus (80/20)</label>
-                <div id="dash-focus" style="font-size:1.2em; font-weight:bold; margin-top:10px">---</div>
-            </div>
-            <div class="detail-card"><label>Trend</label><canvas id="mainChart" height="120"></canvas></div>
-        </div>
-
-        <div id="view-crm" class="view">
-            <h2>Network Dossier</h2>
-            <div class="detail-card">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px">
-                    <div><label>Naam</label><input type="text" id="p-name" oninput="saveCRM()"></div>
-                    <div><label>Categorie</label><input type="text" id="p-cat" oninput="saveCRM()"></div>
-                    <div><label>Geboortedatum</label><input type="date" id="p-dob" onchange="saveCRM()"></div>
-                    <div><label>Strategisch Veld</label><textarea id="p-next" oninput="saveCRM()" style="border-color:var(--accent-orange)"></textarea></div>
-                    <div><label>Werk</label><textarea id="p-werk" oninput="saveCRM()"></textarea></div>
-                    <div><label>Privé</label><textarea id="p-prive" oninput="saveCRM()"></textarea></div>
-                </div>
-                <button onclick="resetCRM()" style="margin-top:20px; background:#222; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer">+ Nieuw Contact</button>
-            </div>
-        </div>
-
-        <div id="view-fit" class="view">
-            <h2>Vitality Planner</h2>
-            <div id="planner-grid"></div>
-        </div>
-
-        <div id="view-lev" class="view">
-            <h2>Leverage Log</h2>
-            <div class="detail-card"><label>80/20 Focus</label><textarea id="lev-focus" oninput="saveLev()"></textarea></div>
-        </div>
-    </div>
-
-    <div class="sidebar-right">
-        <div id="side-crm" class="side-context active">
-            <input type="search" id="search" placeholder="Zoek dossier..." onkeyup="render()">
-            <div id="crm-list" style="margin-top:20px"></div>
-        </div>
-        <div id="side-fit" class="side-context">
-            <label>Nieuwe Weging</label>
-            <input type="number" step="0.1" id="w-in" onkeydown="if(event.key==='Enter') logW()">
-            <canvas id="sideChart" height="200" style="margin-top:20px"></canvas>
-        </div>
-    </div>
-
-<script>
-    // DATA
-    let db = JSON.parse(localStorage.getItem('vigor_v52')) || {
-        people: [], fit: { target: 3, logs: [], tasks: [] },
-        lev: { 8020: {} }
+    const DATA = {
+        export: () => {
+            const blob = new Blob([JSON.stringify(STATE.db)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'vigor_backup.json'; a.click();
+        },
+        import: (e) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                STATE.db = JSON.parse(ev.target.result);
+                localStorage.setItem('vigor_v54', JSON.stringify(STATE.db));
+                location.reload();
+            };
+            reader.readAsText(e.target.files[0]);
+        }
     };
 
-    // NAVIGATIE (FAIL-SAFE)
-    function nav(id) {
-        console.log("Switching to: " + id);
-        
-        // Verberg alles met brute kracht
-        const views = document.querySelectorAll('.view');
-        for(let v of views) v.classList.remove('active');
-        
-        const sides = document.querySelectorAll('.side-context');
-        for(let s of sides) s.classList.remove('active');
-        
-        const btns = document.querySelectorAll('.tab-btn');
-        for(let b of btns) b.classList.remove('active');
-
-        // Toon doelen
-        document.getElementById('view-' + id).classList.add('active');
-        document.getElementById('btn-' + id).classList.add('active');
-        
-        if(id === 'fit') {
-            document.getElementById('side-fit').classList.add('active');
-        } else {
-            document.getElementById('side-crm').classList.add('active');
-        }
-        
-        render();
-    }
-
-    // SNELTOETSEN (1, 2, 3, 4)
-    window.addEventListener('keydown', (e) => {
-        if(document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
-        if(e.key === '1') nav('home');
-        if(e.key === '2') nav('crm');
-        if(e.key === '3') nav('fit');
-        if(e.key === '4') nav('lev');
-    });
-
-    // CRM
-    let selId = null;
-    function saveCRM() {
-        const n = document.getElementById('p-name').value; if(!n) return;
-        let p = selId ? db.people.find(x => x.id === selId) : null;
-        if(!p) { p = { id: Date.now() }; db.people.push(p); selId = p.id; }
-        ['name','cat','dob','next','werk','prive'].forEach(f => p[f] = document.getElementById('p-'+f).value);
-        localStorage.setItem('vigor_v52', JSON.stringify(db));
-    }
-    function editPerson(id) {
-        selId = id; const p = db.people.find(x => x.id === id);
-        ['name','cat','dob','next','werk','prive'].forEach(f => document.getElementById('p-'+f).value = p[f] || '');
-        nav('crm');
-    }
-    function resetCRM() { selId = null; document.querySelectorAll('#view-crm input, #view-crm textarea').forEach(i => i.value=''); render(); }
-
-    // RENDER
-    function render() {
-        // Stats
-        document.getElementById('st-n').innerText = db.people.length;
-        document.getElementById('st-w').innerText = (db.fit.logs[0]?.val || 0) + " kg";
-
-        // CRM Sidebar
-        const q = document.getElementById('search').value.toLowerCase();
-        document.getElementById('crm-list').innerHTML = db.people
-            .filter(p => p.name?.toLowerCase().includes(q))
-            .map(p => `<div class="detail-card" onclick="editPerson(${p.id})" style="cursor:pointer; padding:10px; margin-bottom:10px">${p.name} <small style="display:block; color:var(--accent-blue)">${p.cat || ''}</small></div>`)
-            .join('');
-
-        // Charts (omvat in Try/Catch tegen vastlopers)
-        try {
-            if(window.Chart && db.fit.logs.length > 0) {
-                // Hier zouden de chart-updates komen
-            }
-        } catch(e) { console.error("Chart error", e); }
-    }
-
-    // SYSTEEM
-    function exportData() {
-        const blob = new Blob([JSON.stringify(db)], {type: 'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'vigor_backup.json'; a.click();
-    }
-
-    function importData(e) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            try {
-                db = JSON.parse(ev.target.result);
-                localStorage.setItem('vigor_v52', JSON.stringify(db));
-                alert("Herstel succesvol!");
-                location.reload();
-            } catch(err) { alert("Bestand niet herkend."); }
-        };
-        reader.readAsText(e.target.files[0]);
-    }
-
-    // INIT
-    render();
+    window.onload = UI.render;
 </script>
 </body>
 </html>
