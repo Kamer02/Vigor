@@ -3,246 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Vigor V55.2 - Full Control</title>
+    <title>Vigor V58</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg: #050505; --card: #111111; --blue: #3b82f6; --orange: #ff6b00; --green: #10b981; --text: #fff; --dim: #888; --red: #ef4444;
-        }
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        :root { --bg: #050505; --card: #111; --blue: #3b82f6; --orange: #ff6b00; --green: #10b981; --red: #ef4444; --text: #fff; --dim: #888; }
+        * { box-sizing: border-box; font-family: -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--text); margin: 0; padding: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
         
-        /* NAVIGATIE */
         .nav { position: fixed; top: 0; width: 100%; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); display: flex; z-index: 1000; border-bottom: 1px solid #333; }
-        .nav-btn { flex: 1; padding: 18px 5px; background: none; border: none; color: var(--dim); font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .nav-btn { flex: 1; padding: 18px 5px; background: none; border: none; color: var(--dim); font-weight: 800; font-size: 11px; text-transform: uppercase; }
         .nav-btn.active { color: var(--blue); border-bottom: 3px solid var(--blue); }
 
-        /* CONTENT */
         .container { flex: 1; overflow-y: auto; padding: 80px 15px 100px; max-width: 600px; margin: 0 auto; width: 100%; }
         .pane { display: none; }
         .pane.active { display: block; }
         
-        /* UI ELEMENTS */
-        .card { background: var(--card); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        label { display: block; font-size: 10px; color: var(--dim); font-weight: 900; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
-        .val { font-size: 26px; font-weight: 900; }
-        input, textarea, select { width: 100%; padding: 14px; background: #000; border: 1px solid #333; color: #fff; border-radius: 12px; margin-bottom: 12px; font-size: 16px; }
-        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 14px; }
-
-        /* MATRIX STYLE */
-        .matrix { display: grid; grid-template-columns: repeat(7, 1fr) 30px; gap: 5px; margin-top: 10px; }
-        .m-cell { background: #000; border: 1px solid #222; border-radius: 6px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; }
-        .m-cell.done { border-color: var(--green); background: rgba(16, 185, 129, 0.15); color: var(--green); }
-        .m-header { font-size: 8px; color: var(--dim); text-align: center; margin-bottom: 5px; }
-
-        /* DRAWER & FAB */
-        #drawer { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #0a0a0a; z-index: 2000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 80px 20px; border-left: 1px solid #333; overflow-y: auto; }
-        #drawer.open { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
-        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--blue); border-radius: 50%; color: white; border: none; font-size: 24px; z-index: 1500; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .card { background: var(--card); padding: 18px; border-radius: 16px; border: 1px solid #222; margin-bottom: 15px; position: relative; }
+        label { display: block; font-size: 10px; color: var(--dim); font-weight: 900; text-transform: uppercase; margin-bottom: 6px; }
+        .val { font-size: 24px; font-weight: 900; }
         
-        .task-item { display: flex; align-items: center; background: #1a1a1a; padding: 12px; border-radius: 10px; margin-top: 8px; border-left: 4px solid #444; }
-        .task-item.done { border-color: var(--green); opacity: 0.5; text-decoration: line-through; }
+        input, textarea, select { width: 100%; padding: 14px; background: #000; border: 1px solid #333; color: #fff; border-radius: 12px; margin-bottom: 12px; font-size: 16px; }
+        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; }
+
+        /* MATRIX */
+        .matrix-grid { display: grid; grid-template-columns: repeat(7, 1fr) 35px; gap: 5px; margin-top: 10px; }
+        .m-day { background: #000; border: 1px solid #222; border-radius: 8px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; }
+        .m-day.done { border-color: var(--green); background: rgba(16, 185, 129, 0.1); color: var(--green); }
+        .m-day.today { border-color: var(--blue); box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+
+        /* LOGS */
+        .log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #222; font-size: 14px; }
+        .log-tag { font-size: 10px; background: #222; padding: 2px 6px; border-radius: 4px; color: var(--dim); margin-left: 8px; }
+
+        #drawer { position: fixed; top: 0; right: -100%; width: 85%; height: 100%; background: #0a0a0a; z-index: 2000; transition: 0.3s; padding: 80px 20px; border-left: 1px solid #333; overflow-y: auto; }
+        #drawer.open { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.8); }
+        .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--blue); border-radius: 50%; color: white; border: none; font-size: 24px; z-index: 1500; }
     </style>
 </head>
 <body>
 
     <div class="nav">
-        <button id="n-hub" class="nav-btn active" onclick="go('hub')">Hub</button>
-        <button id="n-crm" class="nav-btn" onclick="go('crm')">Network</button>
-        <button id="n-fit" class="nav-btn" onclick="go('fit')">Vitality</button>
-        <button id="n-lev" class="nav-btn" onclick="go('lev')">Leverage</button>
+        <button id="btn-hub" class="nav-btn active" onclick="show('hub')">Hub</button>
+        <button id="btn-crm" class="nav-btn" onclick="show('crm')">Network</button>
+        <button id="btn-fit" class="nav-btn" onclick="show('fit')">Vitality</button>
+        <button id="btn-lev" class="nav-btn" onclick="show('lev')">Leverage</button>
     </div>
 
-    <button class="fab" onclick="toggleDrawer()">☰</button>
+    <button class="fab" onclick="openDrawer()">☰</button>
 
     <div class="container">
         <div id="p-hub" class="pane active">
-            <h1 style="margin-top:0">Hub</h1>
-            <div class="grid">
-                <div class="card"><label>Dossiers</label><div class="val" id="st-n">0</div></div>
-                <div class="card"><label>Vitality</label><div class="val" id="st-v" style="color:var(--green)">0%</div></div>
-                <div class="card"><label>Gewicht</label><div class="val" id="st-w">0</div></div>
-                <div class="card"><label>Week</label><div class="val" id="st-wk">0</div></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="card"><label>Vitality</label><div class="val" id="h-v" style="color:var(--green)">0%</div></div>
+                <div class="card"><label>Streak</label><div class="val" id="h-s" style="color:var(--orange)">0</div></div>
             </div>
-            <div id="bday-zone"></div>
-            <div class="card" style="border-left: 5px solid var(--orange)">
-                <label style="color:var(--orange)">Focus 80/20</label>
-                <div id="st-focus" style="font-weight:bold; font-size:1.2em; margin-top:5px">---</div>
-            </div>
+            <div class="card"><label>Gewicht Trend</label><canvas id="weightChart" height="150"></canvas></div>
+            <div id="alert-zone"></div>
         </div>
 
         <div id="p-crm" class="pane">
-            <h2 id="crm-head">Dossier</h2>
             <div class="card">
-                <label>Naam</label><input type="text" id="c-name" oninput="save()">
+                <label>Naam Dossier</label><input type="text" id="c-name" oninput="save()">
                 <label style="color:var(--orange)">Strategic Next Step</label>
                 <textarea id="c-next" oninput="save()" style="border-color:var(--orange); height:80px"></textarea>
-                <label>Geboortedatum</label><input type="date" id="c-dob" onchange="save()">
-                <label>Context / Info</label><textarea id="c-ctx" oninput="save()"></textarea>
-                
-                <div id="task-zone" style="display:none; margin-top:15px; border-top:1px solid #333; padding-top:15px">
-                    <label>Acties (Druk Enter)</label>
-                    <input type="text" id="t-in" placeholder="+ Nieuwe actie..." onkeydown="if(event.key==='Enter') addTask()">
-                    <div id="t-list"></div>
-                </div>
+                <label>Info</label><textarea id="c-ctx" oninput="save()"></textarea>
             </div>
             <button class="btn" style="background:#222; color:#fff" onclick="resetCRM()">+ NIEUW DOSSIER</button>
         </div>
 
         <div id="p-fit" class="pane">
-            <h2>Vitality</h2>
             <div class="card">
-                <label>Doel: <span id="target-val">3</span>x p/week sporten</label>
-                <input type="range" id="target-range" min="1" max="7" value="3" oninput="setTarget(this.value)">
+                <label>Workout Toevoegen (Vandaag)</label>
+                <div style="display:flex; gap:8px;">
+                    <input type="text" id="f-sport-type" placeholder="Bijv. Hardlopen, Gym..." style="margin:0;">
+                    <button class="btn" style="width:80px; background:var(--green); padding:0;" onclick="logSport()">OK</button>
+                </div>
             </div>
+            
             <div class="card">
-                <label>Log Gewicht</label>
-                <input type="number" id="w-in" step="0.1" onkeydown="if(event.key==='Enter') logWeight()">
+                <label>Gewicht Log</label>
+                <input type="number" id="f-weight" step="0.1" placeholder="85.0" onkeydown="if(event.key==='Enter') logWeight()">
             </div>
-            <div id="matrix-zone"></div>
+
+            <div class="card"><label>28-Dagen Matrix</label><div id="matrix-container"></div></div>
+            
+            <div class="card"><label>Recente Workouts</label><div id="sport-history"></div></div>
         </div>
 
         <div id="p-lev" class="pane">
-            <h2>Leverage</h2>
-            <div class="card">
-                <label>Weekanalyse (80/20 Focus)</label>
-                <textarea id="l-8020" oninput="saveLev()" style="height:120px" placeholder="Wat is deze week de hefboom?"></textarea>
-            </div>
-            <div class="card">
-                <label>Decision Journal</label>
-                <input type="text" id="dj-t" placeholder="Besluit...">
-                <textarea id="dj-p" placeholder="Voorspelling..."></textarea>
-                <button class="btn" style="background:var(--green); color:#000" onclick="addDJ()">LOG BESLUIT</button>
-                <div id="dj-list" style="margin-top:15px"></div>
-            </div>
-            <div class="card">
-                <label>Data Management</label>
-                <button class="btn" style="background:var(--blue); color:#fff" onclick="exportData()">💾 DOWNLOAD BACKUP</button>
-            </div>
+            <div class="card"><label>80/20 Weekfocus</label><textarea id="l-8020" oninput="saveLev()" style="height:120px"></textarea></div>
+            <button class="btn" style="background:var(--blue); color:#fff" onclick="exportData()">💾 DOWNLOAD BACKUP</button>
         </div>
     </div>
 
     <div id="drawer">
         <label>Zoeken</label>
         <input type="text" id="search" placeholder="Naam..." onkeyup="renderList()">
-        <div id="list-box"></div>
-        <button class="btn" style="background:#222; color:#fff; margin-top:20px" onclick="toggleDrawer()">SLUITEN</button>
+        <div id="list-container"></div>
     </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('vigor_v55')) || { people: [], fit: { target: 3, logs: [], tasks: [] }, lev: { focus: {}, dj: [] } };
+    let db = JSON.parse(localStorage.getItem('vigor_v58')) || { 
+        people: [], 
+        fit: { target: 3, logs: [], tasks: [], sportEntries: {} }, 
+        lev: { focus: {} } 
+    };
     let selId = null;
+    let myChart = null;
 
-    function getWk() {
-        const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 4 - (d.getDay()||7));
-        return Math.ceil((((d - new Date(d.getFullYear(),0,1)) / 8.64e7) + 1));
+    function persist() { localStorage.setItem('vigor_v58', JSON.stringify(db)); render(); }
+    function getWk() { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + 4 - (d.getDay()||7)); return Math.ceil((((d - new Date(d.getFullYear(),0,1)) / 8.64e7) + 1)); }
+
+    function show(pane) {
+        document.querySelectorAll('.pane, .nav-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('p-' + pane).classList.add('active');
+        document.getElementById('btn-' + pane).classList.add('active');
+        closeDrawer(); render();
     }
 
+    function openDrawer() { document.getElementById('drawer').classList.add('open'); }
+    function closeDrawer() { document.getElementById('drawer').classList.remove('open'); }
+
+    // --- CRM ---
     function save() {
         if (!selId && !document.getElementById('c-name').value) return;
         let p = db.people.find(x => x.id === selId);
-        if (!p) { p = { id: Date.now(), tasks: [] }; db.people.push(p); selId = p.id; }
-        ['name','next','ctx','dob'].forEach(f => p[f] = document.getElementById('c-'+f).value);
+        if (!p) { p = { id: Date.now() }; db.people.push(p); selId = p.id; }
+        ['name','next','ctx'].forEach(f => p[f] = document.getElementById('c-'+f).value);
+        persist();
+    }
+    function resetCRM() { selId = null; document.querySelectorAll('#p-crm input, #p-crm textarea').forEach(i => i.value=''); render(); }
+
+    // --- VITALITY ---
+    function logWeight() { 
+        const v = document.getElementById('f-weight').value; 
+        if(v) db.fit.logs.unshift({v, d: new Date().toLocaleDateString('nl-NL', {day:'2-digit', month:'2-digit'})});
+        document.getElementById('f-weight').value = ''; persist(); 
+    }
+
+    function logSport() {
+        const type = document.getElementById('f-sport-type').value || "Sessie";
+        const ds = new Date().toISOString().split('T')[0];
+        if(!db.fit.tasks.includes(ds)) db.fit.tasks.push(ds);
+        db.fit.sportEntries[ds] = type;
+        document.getElementById('f-sport-type').value = ''; persist();
+    }
+
+    function delSport(ds) {
+        db.fit.tasks = db.fit.tasks.filter(t => t !== ds);
+        delete db.fit.sportEntries[ds];
         persist();
     }
 
-    function persist() { localStorage.setItem('vigor_v55', JSON.stringify(db)); render(); }
-
-    function go(pane) {
-        document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('p-' + pane).classList.add('active');
-        document.getElementById('n-' + pane).classList.add('active');
-        toggleDrawer(false); render();
+    function render() {
+        // Hub Stats
+        document.getElementById('h-v').innerText = db.fit.tasks.length > 0 ? "OK" : "0%";
+        
+        // Render List & Matrix
+        renderMatrix();
+        renderList();
+        renderChart();
+        
+        // Sport History
+        const sportLogs = db.fit.tasks.sort().reverse().slice(0,5);
+        document.getElementById('sport-history').innerHTML = sportLogs.map(ds => `
+            <div class="log-item">
+                <span>${ds} <span class="log-tag">${db.fit.sportEntries[ds] || 'Sport'}</span></span>
+                <span onclick="delSport('${ds}')" style="color:var(--red)">✕</span>
+            </div>
+        `).join('');
     }
 
-    function toggleDrawer(s) { const d = document.getElementById('drawer'); if(s===undefined) d.classList.toggle('open'); else if(s) d.classList.add('open'); else d.classList.remove('open'); }
+    function renderMatrix() {
+        const start = new Date(); start.setDate(start.getDate() - start.getDay() + 1);
+        let html = '<div class="matrix-grid" style="font-size:9px; color:var(--dim); text-align:center"><div>M</div><div>D</div><div>W</div><div>D</div><div>V</div><div>Z</div><div>Z</div><div></div></div>';
+        let wkDone = 0, streak = 0, check = new Date();
+        while(db.fit.tasks.includes(check.toISOString().split('T')[0])) { streak++; check.setDate(check.getDate()-1); }
+        document.getElementById('h-s').innerText = streak;
 
-    function render() {
-        const wk = getWk();
-        document.getElementById('st-n').innerText = db.people.length;
-        document.getElementById('st-w').innerText = db.fit.logs[0]?.v || 0;
-        document.getElementById('st-wk').innerText = wk;
-        document.getElementById('st-focus').innerText = db.lev.focus[wk] || "Nog geen focus.";
-        
-        // Birthday check
-        const today = new Date().toISOString().slice(5,10);
-        const bdays = db.people.filter(p => p.dob && p.dob.slice(5,10) === today);
-        document.getElementById('bday-zone').innerHTML = bdays.map(p => `<div class="card" style="background:var(--orange); color:white; font-weight:bold">🎂 Jarig: ${p.name}</div>`).join('');
+        for(let w=0; w<4; w++) {
+            html += '<div class="matrix-grid">';
+            let curDone = 0;
+            for(let d=0; d<7; d++) {
+                let cur = new Date(start); cur.setDate(cur.getDate() + (w*7) + d);
+                let ds = cur.toISOString().split('T')[0], isDone = db.fit.tasks.includes(ds), isToday = ds === new Date().toISOString().split('T')[0];
+                if(isDone && w===0) curDone++;
+                html += `<div class="m-day ${isDone?'done':''} ${isToday?'today':''}" onclick="toggleDay('${ds}')">${cur.getDate()}</div>`;
+            }
+            html += `<div style="display:flex; align-items:center; justify-content:center; font-size:18px">${curDone>=db.fit.target?'🏆':''}</div></div>`;
+            if(w===0) wkDone = curDone;
+        }
+        document.getElementById('matrix-container').innerHTML = html;
+        document.getElementById('h-v').innerText = Math.round((wkDone/db.fit.target)*100) + "%";
+    }
 
-        renderList(); renderMatrix(); renderDJ();
+    function toggleDay(ds) {
+        const i = db.fit.tasks.indexOf(ds);
+        if(i>-1) {
+            db.fit.tasks.splice(i,1);
+            delete db.fit.sportEntries[ds];
+        } else {
+            db.fit.tasks.push(ds);
+            db.fit.sportEntries[ds] = "Workout";
+        }
+        persist();
     }
 
     function renderList() {
         const q = document.getElementById('search').value.toLowerCase();
-        document.getElementById('list-box').innerHTML = db.people.filter(p => p.name.toLowerCase().includes(q)).map(p => `<div style="background:#1a1a1a; padding:15px; border-radius:10px; margin-bottom:8px; border-left:4px solid var(--blue)" onclick="edit(${p.id})"><b>${p.name}</b></div>`).join('');
+        document.getElementById('list-container').innerHTML = db.people.filter(p => p.name.toLowerCase().includes(q))
+            .map(p => `<div style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:10px; border-left:4px solid var(--blue)" onclick="edit(${p.id})"><b>${p.name}</b></div>`).join('');
     }
 
     function edit(id) {
         selId = id; const p = db.people.find(x => x.id === id);
-        ['name','next','ctx','dob'].forEach(f => document.getElementById('c-'+f).value = p[f] || '');
-        document.getElementById('task-zone').style.display = 'block';
-        renderTasks(); go('crm');
+        ['name','next','ctx'].forEach(f => document.getElementById('c-'+f).value = p[f] || '');
+        show('crm');
     }
 
-    function resetCRM() { selId = null; document.querySelectorAll('#p-crm input, #p-crm textarea').forEach(i => i.value=''); document.getElementById('task-zone').style.display = 'none'; }
-
-    function addTask() {
-        const i = document.getElementById('t-in'); const p = db.people.find(x => x.id === selId);
-        p.tasks.push({id: Date.now(), t: i.value, d: false}); i.value = ''; renderTasks(); persist();
+    function renderChart() {
+        const ctx = document.getElementById('weightChart').getContext('2d');
+        const data = [...db.fit.logs].reverse().slice(-7);
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: data.map(l => l.d), datasets: [{ data: data.map(l => l.v), borderColor: '#3b82f6', tension: 0.3, fill: false }] },
+            options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false } } } }
+        });
     }
 
-    function renderTasks() {
-        const p = db.people.find(x => x.id === selId);
-        document.getElementById('t-list').innerHTML = p.tasks.map(t => `<div class="task-item ${t.d?'done':''}" onclick="toggleT(${t.id})">${t.t}</div>`).join('');
-    }
-
-    function toggleT(tid) { const p = db.people.find(x => x.id === selId); const t = p.tasks.find(x => x.id === tid); t.d = !t.d; persist(); }
-
-    function setTarget(v) { db.fit.target = v; document.getElementById('target-val').innerText = v; persist(); }
-    
-    function logWeight() { const i = document.getElementById('w-in'); db.fit.logs.unshift({v: i.value, d: new Date().toLocaleDateString()}); i.value = ''; persist(); }
-
-    function toggleDay(ds) { const idx = db.fit.tasks.indexOf(ds); if(idx>-1) db.fit.tasks.splice(idx,1); else db.fit.tasks.push(ds); persist(); }
-
-    function renderMatrix() {
-        let html = '<div class="matrix m-header"><div>M</div><div>D</div><div>W</div><div>D</div><div>V</div><div>Z</div><div>Z</div><div></div></div>';
-        const start = new Date(); start.setDate(start.getDate() - start.getDay() + 1);
-        let weekDone = 0;
-        for(let w=0; w<4; w++) {
-            html += '<div class="matrix">';
-            let curDone = 0;
-            for(let d=0; d<7; d++) {
-                let cur = new Date(start); cur.setDate(cur.getDate() + (w*7) + d);
-                let ds = cur.toISOString().split('T')[0];
-                let done = db.fit.tasks.includes(ds);
-                if(done && w===0) weekDone++;
-                html += `<div class="m-cell ${done?'done':''}" onclick="toggleDay('${ds}')">${cur.getDate()}</div>`;
-            }
-            html += `<div style="display:flex; align-items:center; justify-content:center; font-size:14px">${weekDone>=db.fit.target?'🏆':''}</div></div>`;
-        }
-        document.getElementById('matrix-zone').innerHTML = html;
-        document.getElementById('st-v').innerText = Math.round((weekDone/db.fit.target)*100) + "%";
-    }
-
+    function exportData() { window.open("data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db))); }
     function saveLev() { db.lev.focus[getWk()] = document.getElementById('l-8020').value; persist(); }
-
-    function addDJ() {
-        db.lev.dj.unshift({id: Date.now(), t: document.getElementById('dj-t').value, p: document.getElementById('dj-p').value, d: new Date().toISOString()});
-        document.getElementById('dj-t').value = ''; document.getElementById('dj-p').value = ''; persist();
-    }
-
-    function renderDJ() {
-        document.getElementById('dj-list').innerHTML = db.lev.dj.map(d => {
-            const diff = (new Date() - new Date(d.d)) / 8.64e7;
-            return `<div class="card" style="font-size:0.8em; ${diff>180?'border-color:var(--red)':''}"><b>${d.t}</b><br><small>${new Date(d.d).toLocaleDateString()}</small></div>`;
-        }).join('');
-    }
-
-    function exportData() {
-        const data = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db));
-        const a = document.createElement('a'); a.href = data; a.download = "vigor_backup.json"; a.click();
-    }
 
     window.onload = render;
 </script>
